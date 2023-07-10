@@ -118,6 +118,7 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_MODULE_LIST, &CLogViewerDlg::OnItemClickModuleList)
 	//}}AFX_MSG_MAP
 	
+	ON_BN_CLICKED(IDC_BUTTON_RELOAD, &CLogViewerDlg::OnBnClickedButtonReload)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -421,41 +422,7 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate)
 
 void CLogViewerDlg::OnButtonRefresh() 
 {
-	UpdateData();
-	LockWindowUpdate();
 
-	if ( GetSelectedModules() == 0 && !m_bExclude)
-	{
-		AfxMessageBox("Please select at least one Module!");
-		return;
-	}
-
-
-	m_nSeverity = 4 - m_comboLogSeverity.GetCurSel();
-
-	m_pLogList->DeleteAllItems();
-
-	m_dtNow = COleDateTime::GetCurrentTime();
-	if ( m_bToday )
-	{
-		CString strDate = m_dtNow.Format("%Y-%m-%d");
-		LoadDayLog(strDate);
-
-	}
-	else
-	{
-		for ( COleDateTime dtDay = m_tStartDay; dtDay <= m_tEndDay; dtDay += 1)
-		{
-			CString strDate = dtDay.Format("%Y-%m-%d");
-			LoadDayLog(strDate);
-		}
-	}
-	
-	UnlockWindowUpdate();
-
-	CString strTitle;
-	strTitle.Format("LogViewer - Total %d logs", m_pLogList->GetItemCount());
-	SetWindowText(strTitle);
 }
 
 void CLogViewerDlg::InitModuleList()
@@ -680,4 +647,44 @@ void CLogViewerDlg::OnItemClickModuleList(NMHDR *pNMHDR, LRESULT *pResult)
 	}
 	
 	*pResult = 0;
+}
+
+
+void CLogViewerDlg::OnBnClickedButtonReload()
+{
+	UpdateData();
+	LockWindowUpdate();
+
+	if (GetSelectedModules() == 0 && !m_bExclude)
+	{
+		AfxMessageBox("Please select at least one Module!");
+		return;
+	}
+
+
+	m_nSeverity = 4 - m_comboLogSeverity.GetCurSel();
+
+	m_pLogList->DeleteAllItems();
+
+	m_dtNow = COleDateTime::GetCurrentTime();
+	if (m_bToday)
+	{
+		CString strDate = m_dtNow.Format("%Y-%m-%d");
+		LoadDayLog(strDate);
+
+	}
+	else
+	{
+		for (COleDateTime dtDay = m_tStartDay; dtDay <= m_tEndDay; dtDay += 1)
+		{
+			CString strDate = dtDay.Format("%Y-%m-%d");
+			LoadDayLog(strDate);
+		}
+	}
+
+	UnlockWindowUpdate();
+
+	CString strTitle;
+	strTitle.Format("LogViewer - Total %d logs", m_pLogList->GetItemCount());
+	SetWindowText(strTitle);
 }
