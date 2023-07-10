@@ -20,7 +20,6 @@
 #define IDC_EDIT_LOG_CONTAINS           1005
 #define IDC_BUTTON_SELECT_ALL           1006
 #define IDC_BUTTON_SELECT_NONE          1007
-#define IDC_BUTTON_REFRESH2             1008
 #define IDC_BUTTON_RELOAD               1008
 #define IDC_COMBO_SEVERITY              1009
 #define IDC_CHECK_TODAY                 1010

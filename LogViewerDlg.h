@@ -76,8 +76,11 @@ protected:
 	afx_msg void OnCheckCurrentHour();
 	afx_msg void OnButtonSelectAll();
 	afx_msg void OnButtonSelectNone();
+	afx_msg void OnItemClickModuleList(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnCustomDrawListCtrl(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+public:	
 };
 
 //{{AFX_INSERT_LOCATION}}

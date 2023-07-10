@@ -114,7 +114,10 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHECK_CURRENT_HOUR, OnCheckCurrentHour)
 	ON_BN_CLICKED(IDC_BUTTON_SELECT_ALL, OnButtonSelectAll)
 	ON_BN_CLICKED(IDC_BUTTON_SELECT_NONE, OnButtonSelectNone)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST_LOG, OnCustomDrawListCtrl)
+	ON_NOTIFY(NM_CLICK, IDC_LIST_MODULE_LIST, &CLogViewerDlg::OnItemClickModuleList)
 	//}}AFX_MSG_MAP
+	
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -207,6 +210,39 @@ HCURSOR CLogViewerDlg::OnQueryDragIcon()
 {
 	return (HCURSOR) m_hIcon;
 }
+
+void CLogViewerDlg::OnCustomDrawListCtrl(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	NMLVCUSTOMDRAW* pLVCD = reinterpret_cast<NMLVCUSTOMDRAW*>(pNMHDR);
+	*pResult = CDRF_DODEFAULT;
+
+	// Check the stage of custom drawing
+	switch (pLVCD->nmcd.dwDrawStage)
+	{
+	case CDDS_PREPAINT:
+		// Request item-specific notifications for each subitem
+		*pResult = CDRF_NOTIFYITEMDRAW;
+		break;
+
+	case CDDS_ITEMPREPAINT:
+		// Determine the item and subitem index
+		int itemIndex = static_cast<int>(pLVCD->nmcd.dwItemSpec);
+		int subItemIndex = pLVCD->iSubItem;
+
+		// Set the desired font color based on conditions
+		COLORREF textColor = RGB(255, 0, 0);  // Red color example
+		//if (/* your condition to set a different color for this item */)
+		{
+			textColor = RGB(0, 0, 255);  // Blue color example
+		}
+
+		// Set the custom font color for the item's subitem
+		//pLVCD->clrText = textColor;
+		*pResult = CDRF_NEWFONT;
+		break;
+	}
+}
+
 
 void CLogViewerDlg::InitLogList()
 {
@@ -425,8 +461,11 @@ void CLogViewerDlg::OnButtonRefresh()
 void CLogViewerDlg::InitModuleList()
 {
 	m_pModuleList = (CListCtrl*)GetDlgItem(IDC_LIST_MODULE_LIST);
-	m_pModuleList->SetExtendedStyle(m_pLogList->GetStyle()|LVS_EX_CHECKBOXES);
-
+	DWORD dwStyle = m_pModuleList->GetExtendedStyle();
+	dwStyle |= LVS_EX_FULLROWSELECT;
+	dwStyle |= LVS_EX_GRIDLINES;
+	dwStyle |= LVS_EX_CHECKBOXES;
+	m_pModuleList->SetExtendedStyle(dwStyle);
 
 	m_pModuleList->InsertColumn(0, " ", LVCFMT_LEFT, 20);
 	m_pModuleList->InsertColumn(1, "No", LVCFMT_LEFT, 30);
@@ -447,6 +486,7 @@ void CLogViewerDlg::InitModuleList()
 	AddModule("65", "Framework");
 	AddModule("66", "Audit Server");
 	AddModule("77", "MWL Server");	
+	AddModule("93", "Device Manager");	
 	AddModule("94", "Acq Panel");	
 }
 
@@ -617,4 +657,27 @@ int CLogViewerDlg::GetSelectedModules()
 		m_bCheckModule = TRUE;
 
 	return nTotal;
+}
+
+
+void CLogViewerDlg::OnItemClickModuleList(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+
+	if (pNMLV->iItem >= 0 && pNMLV->iSubItem > 0)
+	{
+		UINT state = m_pModuleList->GetItemState(pNMLV->iItem, LVIS_STATEIMAGEMASK);
+
+		// Toggle checkbox state
+		if (state == INDEXTOSTATEIMAGEMASK(1)) // Unchecked
+		{
+			m_pModuleList->SetCheck(pNMLV->iItem, TRUE);
+		}
+		else if (state == INDEXTOSTATEIMAGEMASK(2)) // Checked
+		{
+			m_pModuleList->SetCheck(pNMLV->iItem, FALSE);
+		}
+	}
+	
+	*pResult = 0;
 }
