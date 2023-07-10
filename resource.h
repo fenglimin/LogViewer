@@ -1,5 +1,5 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
+// Microsoft Visual C++ generated include file.
 // Used by LogViewer.rc
 //
 #define IDM_ABOUTBOX                    0x0010
@@ -20,6 +20,8 @@
 #define IDC_EDIT_LOG_CONTAINS           1005
 #define IDC_BUTTON_SELECT_ALL           1006
 #define IDC_BUTTON_SELECT_NONE          1007
+#define IDC_BUTTON_REFRESH2             1008
+#define IDC_BUTTON_RELOAD               1008
 #define IDC_COMBO_SEVERITY              1009
 #define IDC_CHECK_TODAY                 1010
 #define IDC_CHECK_CURRENT_HOUR          1011
@@ -31,6 +33,8 @@
 #define IDC_CHECK_EXCLUDE               1017
 #define IDC_DATETIMEPICKER_END          1018
 #define ID_ACCEPT_RETURN                1019
+#define IDC_EDIT_PROCESS_ID             1023
+#define IDC_EDIT_THREAD_ID              1024
 
 // Next default values for new objects
 // 

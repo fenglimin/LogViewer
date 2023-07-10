@@ -215,20 +215,22 @@ void CLogViewerDlg::InitLogList()
 	// Initial extended style for the list control on this dialog
 	DWORD dwStyle = m_pLogList->GetExtendedStyle();
 	dwStyle |= LVS_EX_FULLROWSELECT;
+	dwStyle |= LVS_EX_GRIDLINES;
 	m_pLogList->SetExtendedStyle(dwStyle);
-	
-	m_pLogList->InsertColumn(0, " ", LVCFMT_LEFT, 20);
-	m_pLogList->InsertColumn(1, "Date", LVCFMT_LEFT, 70);
-	m_pLogList->InsertColumn(2, "Time", LVCFMT_LEFT, 60);
-	m_pLogList->InsertColumn(3, "MN", LVCFMT_LEFT, 30);
-	m_pLogList->InsertColumn(4, "ModuleName", LVCFMT_LEFT, 90);
-	m_pLogList->InsertColumn(5, "Code", LVCFMT_LEFT, 50);
-	m_pLogList->InsertColumn(6, "Log Content", LVCFMT_LEFT, 600);
-	m_pLogList->InsertColumn(7, "File", LVCFMT_LEFT, 60);
-	m_pLogList->InsertColumn(8, "LineNo", LVCFMT_LEFT, 60);
+
+	int nCol = 0;
+	m_pLogList->InsertColumn(nCol++, " ", LVCFMT_LEFT, 20);
+	m_pLogList->InsertColumn(nCol++, "Date", LVCFMT_LEFT, 75);
+	m_pLogList->InsertColumn(nCol++, "Time", LVCFMT_LEFT, 85);
+	m_pLogList->InsertColumn(nCol++, "ModuleName", LVCFMT_LEFT, 90);
+	m_pLogList->InsertColumn(nCol++, "Log Content", LVCFMT_LEFT, 600);
+	m_pLogList->InsertColumn(nCol++, "Code", LVCFMT_LEFT, 50);
+	m_pLogList->InsertColumn(nCol++, "File", LVCFMT_LEFT, 60);
+	m_pLogList->InsertColumn(nCol++, "LineNo", LVCFMT_LEFT, 60);
+	m_pLogList->InsertColumn(nCol++, "MN", LVCFMT_LEFT, 30);
 
 	// Create 256 color image lists
-	HIMAGELIST hList = ImageList_Create(16, 16, ILC_COLOR8 | ILC_MASK, 8, 1);
+	HIMAGELIST hList = ImageList_Create(16, 18, ILC_COLOR8 | ILC_MASK, 8, 1);
 	m_ImageListSmall.Attach(hList);
 	
 	// Load the small icons
@@ -265,15 +267,7 @@ void CLogViewerDlg::InsertLog(char *sDate, char *sTime, char *sModuleNumber, cha
 	m_pLogList->SetItem(&lvi);	
 
 	lvi.iSubItem = nSubItem++;
-	lvi.pszText = sModuleNumber;
-	m_pLogList->SetItem(&lvi);
-
-	lvi.iSubItem = nSubItem++;
 	lvi.pszText = sModuleName;
-	m_pLogList->SetItem(&lvi);	
-
-	lvi.iSubItem = nSubItem++;
-	lvi.pszText = sErrorCode;
 	m_pLogList->SetItem(&lvi);	
 
 	lvi.iSubItem = nSubItem++;
@@ -281,12 +275,21 @@ void CLogViewerDlg::InsertLog(char *sDate, char *sTime, char *sModuleNumber, cha
 	m_pLogList->SetItem(&lvi);	
 
 	lvi.iSubItem = nSubItem++;
+	lvi.pszText = sErrorCode;
+	m_pLogList->SetItem(&lvi);
+
+	lvi.iSubItem = nSubItem++;
 	lvi.pszText = sFile;
 	m_pLogList->SetItem(&lvi);	
 
 	lvi.iSubItem = nSubItem++;
 	lvi.pszText = sLineNo;
-	m_pLogList->SetItem(&lvi);	
+	m_pLogList->SetItem(&lvi);
+
+	lvi.iSubItem = nSubItem++;
+	lvi.pszText = sModuleNumber;
+	m_pLogList->SetItem(&lvi);
+
 }
 
 BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate)
@@ -328,7 +331,7 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate)
 		SetWindowText(strSave);
 
 		CString sDate = strSave.Left(10);
-		CString sTime = strSave.Mid(11, 8);
+		CString sTime = strSave.Mid(11, 12);
 
 		CStringEx sModuleNumber = strSave.GetField("`", 1);
 		int nModleNumber = sModuleNumber.AsInt();
@@ -427,24 +430,24 @@ void CLogViewerDlg::InitModuleList()
 
 	m_pModuleList->InsertColumn(0, " ", LVCFMT_LEFT, 20);
 	m_pModuleList->InsertColumn(1, "No", LVCFMT_LEFT, 30);
-	m_pModuleList->InsertColumn(2, "Name", LVCFMT_LEFT, 110);
+	m_pModuleList->InsertColumn(2, "Name", LVCFMT_LEFT, 120);
 
-
-	AddModule("12", "Print Server");
-	AddModule("33", "Oam Server");
-	AddModule("16", "Service Manager");
-	AddModule("66", "Audit Server");
-	AddModule("65", "Framework");
-	AddModule("56", "Acq Server");
-	AddModule("35", "Rule Server");
-	AddModule("30", "Task Manager");
-	AddModule("53", "SSCP Server");
 	AddModule("11", "SMS Server");
-	AddModule("47", "PDC Sender Server");
+	AddModule("12", "Print Server");
 	AddModule("14", "Worklist Panel");
+	AddModule("16", "Service Manager");
+	AddModule("30", "Task Manager");
+	AddModule("33", "Oam Server");
 	AddModule("34", "OAM Panel");
-	AddModule("77", "MWL Server");
+	AddModule("35", "Rule Server");
+	AddModule("47", "PDC Sender Server");
+	AddModule("53", "SSCP Server");
+	AddModule("56", "Acq Server");
 	AddModule("59", "Multi Recordset");
+	AddModule("65", "Framework");
+	AddModule("66", "Audit Server");
+	AddModule("77", "MWL Server");	
+	AddModule("94", "Acq Panel");	
 }
 
 void CLogViewerDlg::OnCheckToday() 
@@ -538,7 +541,7 @@ void CLogViewerDlg::EnableHourControl(BOOL bEnable)
 
 void CLogViewerDlg::AddModule(CString strModuleNumber, CString strModuleName)
 {
-	int nPos = m_pModuleList->InsertItem(0, "");
+	int nPos = m_pModuleList->InsertItem(m_pModuleList->GetItemCount(), "");
 	m_pModuleList->SetItemText(nPos, 1, strModuleNumber);
 	m_pModuleList->SetItemText(nPos, 2, strModuleName);
 }
@@ -558,7 +561,7 @@ BOOL CLogViewerDlg::GetLogDir()
 	strcat(szConfigFile, "config\\Client.ini");
 
 
-	GetPrivateProfileString("LOG","LogHomeDir","C:\\GX Platform\\Log",(char*)Temp,128,szConfigFile);
+	GetPrivateProfileString("LOG","LogHomeDir","C:\\Image Suite\\Log",(char*)Temp,128,szConfigFile);
 
 	m_strLogHome = Temp;
 

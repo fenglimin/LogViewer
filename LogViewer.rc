@@ -1,4 +1,4 @@
-//Microsoft Developer Studio generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -13,13 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Chinese (P.R.C.) resources
+// Chinese (Simplified, PRC) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
-#ifdef _WIN32
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 #pragma code_page(936)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -28,19 +26,28 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON_WAIT           ICON    DISCARDABLE     "res\\nt_service.ico"
-#endif    // Chinese (P.R.C.) resources
+IDI_ICON_WAIT           ICON                    "res\\nt_service.ico"
+
+#endif    // Chinese (Simplified, PRC) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\LogViewer.ico"
+
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -48,18 +55,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE 
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE 
 BEGIN
     "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
     "#define _AFX_NO_OLE_RESOURCES\r\n"
@@ -82,81 +89,63 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDR_MAINFRAME           ICON    DISCARDABLE     "res\\LogViewer.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 235, 55
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_ABOUTBOX DIALOG 0, 0, 235, 55
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About LogViewer"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    LTEXT           "LogViewer Version 1.0",IDC_STATIC,40,10,119,8,
-                    SS_NOPREFIX
+    LTEXT           "LogViewer Version 1.0",IDC_STATIC,40,10,119,8,SS_NOPREFIX
     LTEXT           "Developped By Sail Feng",IDC_STATIC,40,25,119,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
 END
 
-IDD_LOGVIEWER_DIALOG DIALOGEX 0, 0, 668, 395
-STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
-    WS_SYSMENU
+IDD_LOGVIEWER_DIALOG DIALOGEX 0, 0, 943, 518
+STYLE DS_SETFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "LogViewer"
-FONT 8, "MS Sans Serif"
+FONT 8, "Consolas", 400, 0, 0x0
 BEGIN
-    CONTROL         "List1",IDC_LIST_LOG,"SysListView32",LVS_REPORT | 
-                    WS_BORDER | WS_TABSTOP,146,7,515,381
-    COMBOBOX        IDC_COMBO_SEVERITY,58,21,76,97,CBS_DROPDOWNLIST | 
-                    WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Today",IDC_CHECK_TODAY,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,58,42,36,10
+    CONTROL         "List1",IDC_LIST_LOG,"SysListView32",LVS_REPORT | WS_BORDER | WS_TABSTOP,154,6,782,504
+    COMBOBOX        IDC_COMBO_SEVERITY,66,21,76,97,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Today",IDC_CHECK_TODAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,66,42,36,10
     CONTROL         "DateTimePicker1",IDC_DATETIMEPICKER_START,
-                    "SysDateTimePick32",DTS_RIGHTALIGN | WS_TABSTOP,13,55,55,
-                    15
+                    "SysDateTimePick32",DTS_RIGHTALIGN | WS_TABSTOP,13,55,60,15
     CONTROL         "DateTimePicker1",IDC_DATETIMEPICKER_END,
-                    "SysDateTimePick32",DTS_RIGHTALIGN | WS_TABSTOP,79,55,55,
-                    15
-    CONTROL         "Current Hour",IDC_CHECK_CURRENT_HOUR,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,57,79,56,10
-    EDITTEXT        IDC_EDIT_START_HOUR,13,93,55,14,ES_AUTOHSCROLL
-    CONTROL         "Spin1",IDC_SPIN_START_HOUR,"msctls_updown32",
-                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
-                    UDS_ARROWKEYS,58,93,10,14
-    EDITTEXT        IDC_EDIT_END_HOUR,79,93,55,14,ES_AUTOHSCROLL
-    CONTROL         "Spin1",IDC_SPIN_END_HOUR,"msctls_updown32",
-                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
-                    UDS_ARROWKEYS,123,92,11,14
-    CONTROL         "List1",IDC_LIST_MODULE_LIST,"SysListView32",LVS_REPORT | 
-                    WS_BORDER | WS_TABSTOP,13,130,121,177
-    PUSHBUTTON      "Select All",IDC_BUTTON_SELECT_ALL,13,310,50,14
-    PUSHBUTTON      "Select None",IDC_BUTTON_SELECT_NONE,84,310,50,14
-    EDITTEXT        IDC_EDIT_ERROR_CODE,62,332,72,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_LOG_CONTAINS,62,351,72,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "Load Log",IDC_BUTTON_REFRESH,14,369,120,14
-    GROUPBOX        "Filter",IDC_STATIC,7,7,132,381
-    LTEXT           "ErrorCode",IDC_STATIC,13,335,32,8
-    LTEXT           "Log Contain",IDC_STATIC,13,353,39,8
+                    "SysDateTimePick32",DTS_RIGHTALIGN | WS_TABSTOP,82,55,60,15
+    CONTROL         "Current Hour",IDC_CHECK_CURRENT_HOUR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,66,79,62,10
+    EDITTEXT        IDC_EDIT_START_HOUR,13,93,60,14,ES_AUTOHSCROLL
+    CONTROL         "Spin1",IDC_SPIN_START_HOUR,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS,63,93,10,14
+    EDITTEXT        IDC_EDIT_END_HOUR,82,93,60,14,ES_AUTOHSCROLL
+    CONTROL         "Spin1",IDC_SPIN_END_HOUR,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS,131,92,11,14
+    CONTROL         "List1",IDC_LIST_MODULE_LIST,"SysListView32",LVS_REPORT | WS_BORDER | WS_TABSTOP,13,130,128,200
+    PUSHBUTTON      "Select All",IDC_BUTTON_SELECT_ALL,13,337,50,14
+    PUSHBUTTON      "Select None",IDC_BUTTON_SELECT_NONE,92,337,50,14
+    EDITTEXT        IDC_EDIT_ERROR_CODE,70,359,72,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_LOG_CONTAINS,70,378,72,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Refresh Log",IDC_BUTTON_REFRESH,15,477,128,14
+    GROUPBOX        "Filter",IDC_STATIC,7,7,141,504
+    LTEXT           "ErrorCode",IDC_STATIC,13,362,47,8
+    LTEXT           "Log Contain",IDC_STATIC,13,380,39,8
     LTEXT           "Log Severity",IDC_STATIC,13,22,40,8
     LTEXT           "Date:",IDC_STATIC,13,42,18,8
     LTEXT           "Hour",IDC_STATIC,13,79,16,8
-    LTEXT           "----",IDC_STATIC,69,58,8,8
+    LTEXT           "----",IDC_STATIC,73,58,8,8
     LTEXT           "Module",IDC_STATIC,13,118,24,8
-    LTEXT           "----",IDC_STATIC,69,97,8,8
-    CONTROL         "Exclude",IDC_CHECK_EXCLUDE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,56,116,41,10
+    LTEXT           "----",IDC_STATIC,73,97,8,8
+    CONTROL         "Exclude",IDC_CHECK_EXCLUDE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,66,116,41,10
+    PUSHBUTTON      "Reload Log",IDC_BUTTON_RELOAD,15,494,128,14
+    EDITTEXT        IDC_EDIT_PROCESS_ID,69,396,72,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_THREAD_ID,69,414,72,14,ES_AUTOHSCROLL
+    LTEXT           "Process ID",IDC_STATIC,13,398,47,8
+    LTEXT           "Thread ID",IDC_STATIC,13,417,39,8
 END
 
-IDD_DIALOG_WAIT DIALOG DISCARDABLE  0, 0, 459, 34
-STYLE DS_MODALFRAME | WS_POPUP
+IDD_DIALOG_WAIT DIALOG 0, 0, 459, 34
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "",ID_ACCEPT_RETURN,185,15,6,14,NOT WS_VISIBLE
@@ -165,7 +154,6 @@ BEGIN
 END
 
 
-#ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
 //
 // Version
@@ -188,15 +176,13 @@ BEGIN
     BEGIN
         BLOCK "040904B0"
         BEGIN
-            VALUE "CompanyName", "\0"
-            VALUE "FileDescription", "LogViewer MFC Application\0"
-            VALUE "FileVersion", "1, 0, 0, 1\0"
-            VALUE "InternalName", "LogViewer\0"
-            VALUE "LegalCopyright", "Copyright (C) 2010\0"
-            VALUE "LegalTrademarks", "\0"
-            VALUE "OriginalFilename", "LogViewer.EXE\0"
-            VALUE "ProductName", "LogViewer Application\0"
-            VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "FileDescription", "LogViewer MFC Application"
+            VALUE "FileVersion", "1, 0, 0, 1"
+            VALUE "InternalName", "LogViewer"
+            VALUE "LegalCopyright", "Copyright (C) 2010"
+            VALUE "OriginalFilename", "LogViewer.EXE"
+            VALUE "ProductName", "LogViewer Application"
+            VALUE "ProductVersion", "1, 0, 0, 1"
         END
     END
     BLOCK "VarFileInfo"
@@ -205,8 +191,6 @@ BEGIN
     END
 END
 
-#endif    // !_MAC
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -214,7 +198,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
@@ -227,9 +211,9 @@ BEGIN
     IDD_LOGVIEWER_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 661
+        RIGHTMARGIN, 936
         TOPMARGIN, 7
-        BOTTOMMARGIN, 388
+        BOTTOMMARGIN, 511
     END
 
     IDD_DIALOG_WAIT, DIALOG
@@ -246,9 +230,12 @@ END
 // Bitmap
 //
 
-IDB_IMAGES_NORMAL       BITMAP  DISCARDABLE     "res\\images_n.bmp"
-IDB_IMAGES_SMALL        BITMAP  DISCARDABLE     "res\\bmp00001.bmp"
-IDB_BITMAP_LOG_SEVERITY BITMAP  DISCARDABLE     "res\\bitmap1.bmp"
+IDB_IMAGES_NORMAL       BITMAP                  "res\\images_n.bmp"
+
+IDB_IMAGES_SMALL        BITMAP                  "res\\bmp00001.bmp"
+
+IDB_BITMAP_LOG_SEVERITY BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -273,15 +260,26 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_LOGVIEWER_DIALOG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE
 BEGIN
     IDS_ABOUTBOX            "&About LogViewer..."
 END
 
-#endif    // English (U.S.) resources
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
