@@ -159,6 +159,7 @@ BOOL CLogViewerDlg::OnInitDialog()
 
 	OnButtonSelectAll();
 	
+	//OnBnClickedButtonReload();
 	
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -228,17 +229,25 @@ void CLogViewerDlg::OnCustomDrawListCtrl(NMHDR* pNMHDR, LRESULT* pResult)
 	case CDDS_ITEMPREPAINT:
 		// Determine the item and subitem index
 		int itemIndex = static_cast<int>(pLVCD->nmcd.dwItemSpec);
-		int subItemIndex = pLVCD->iSubItem;
 
-		// Set the desired font color based on conditions
-		COLORREF textColor = RGB(255, 0, 0);  // Red color example
-		//if (/* your condition to set a different color for this item */)
+		LVITEM lvItem;
+		lvItem.mask = LVIF_IMAGE;
+		lvItem.iItem = itemIndex;
+		lvItem.iSubItem = 0;
+
+		if (m_pLogList->GetItem(&lvItem))
 		{
-			textColor = RGB(0, 0, 255);  // Blue color example
-		}
+			int imageIndex = lvItem.iImage;
+			if (imageIndex >= 3)
+			{
+				pLVCD->clrText = RGB(255, 0, 0);
+			}
+			else if (imageIndex == 2)
+			{
+				pLVCD->clrText = RGB(153, 102, 0);
+			}
+		}		
 
-		// Set the custom font color for the item's subitem
-		//pLVCD->clrText = textColor;
 		*pResult = CDRF_NEWFONT;
 		break;
 	}
@@ -517,7 +526,7 @@ void CLogViewerDlg::OnButtonSelectNone()
 
 void CLogViewerDlg::InitFilter()
 {
-	m_comboLogSeverity.SetCurSel(3);
+	m_comboLogSeverity.SetCurSel(4);
 
 	m_spinStartHour.SetRange(0,23);
 	m_spinEndHour.SetRange(0,23);
@@ -571,6 +580,7 @@ BOOL CLogViewerDlg::GetLogDir()
 	GetPrivateProfileString("LOG","LogHomeDir","C:\\Image Suite\\Log",(char*)Temp,128,szConfigFile);
 
 	m_strLogHome = Temp;
+	SetDlgItemText(IDC_EDIT_LOG_DIR, m_strLogHome);
 
 	return TRUE;
 }

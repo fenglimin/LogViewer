@@ -32,6 +32,8 @@
 #define IDC_CHECK_EXCLUDE               1017
 #define IDC_DATETIMEPICKER_END          1018
 #define ID_ACCEPT_RETURN                1019
+#define IDC_EDIT_ERROR_CODE2            1020
+#define IDC_EDIT_LOG_DIR                1020
 #define IDC_EDIT_PROCESS_ID             1023
 #define IDC_EDIT_THREAD_ID              1024
 
