@@ -207,6 +207,17 @@ void CLogViewerDlg::OnPaint()
 	}
 }
 
+BOOL CLogViewerDlg::PreTranslateMessage(MSG* pMsg)
+{
+	if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_ESCAPE)
+	{
+		return TRUE;
+	}
+
+	return __super::PreTranslateMessage(pMsg);
+}
+
+
 // The system calls this to obtain the cursor to display while the user drags
 //  the minimized window.
 HCURSOR CLogViewerDlg::OnQueryDragIcon()
@@ -267,8 +278,7 @@ void CLogViewerDlg::InitLogList()
 
 	int nCol = 0;
 	m_pLogList->InsertColumn(nCol++, " ", LVCFMT_LEFT, 20);
-	m_pLogList->InsertColumn(nCol++, "Date", LVCFMT_LEFT, 75);
-	m_pLogList->InsertColumn(nCol++, "Time", LVCFMT_LEFT, 85);
+	m_pLogList->InsertColumn(nCol++, "Log Time", LVCFMT_LEFT, 150);
 	m_pLogList->InsertColumn(nCol++, "ModuleName", LVCFMT_LEFT, 90);
 	m_pLogList->InsertColumn(nCol++, "Log Content", LVCFMT_LEFT, 600);
 	m_pLogList->InsertColumn(nCol++, "Code", LVCFMT_LEFT, 50);
@@ -295,28 +305,21 @@ void CLogViewerDlg::InitLogList()
 
 void CLogViewerDlg::InsertLog(const LogDetail& logDetail)
 {
-	LVITEM lvi;
-	// Insert the first item
-	lvi.mask =  LVIF_IMAGE | LVIF_TEXT;
-	lvi.iItem = 0;
-	lvi.iSubItem = 0;
-	lvi.pszText = "";
-	lvi.iImage = logDetail.nLogSeverity;		// There are 8 images in the image list
-	m_pLogList->InsertItem(&lvi);
+	int nItem = m_pLogList->GetItemCount();
+	m_pLogList->InsertItem(nItem, "", logDetail.nLogSeverity);
 
 	int nSubItem = 1;
-	m_pLogList->SetItemText(0, nSubItem++, logDetail.strDate);
-	m_pLogList->SetItemText(0, nSubItem++, logDetail.strTime);
-	m_pLogList->SetItemText(0, nSubItem++, logDetail.strModuleName);
-	m_pLogList->SetItemText(0, nSubItem++, logDetail.strLogContent);
-	m_pLogList->SetItemText(0, nSubItem++, logDetail.strCode);
-	m_pLogList->SetItemText(0, nSubItem++, logDetail.strSourceFileName);
-	m_pLogList->SetItemText(0, nSubItem++, logDetail.strLineNumber);
-	m_pLogList->SetItemText(0, nSubItem++, CStringEx(logDetail.nModuleNumber));
-	m_pLogList->SetItemText(0, nSubItem++, logDetail.strRawLog);
+	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strDateTime);
+	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strModuleName);
+	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strLogContent);
+	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strCode);
+	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strSourceFileName);
+	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strLineNumber);
+	m_pLogList->SetItemText(nItem, nSubItem++, CStringEx(logDetail.nModuleNumber));
+	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strRawLog);
 }
 
-BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate)
+BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateSize)
 {
 	char sCurLine[1024];
 	char sNextLine[1024];
@@ -328,11 +331,11 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate)
 		return FALSE;
 	}
 
-	CWaitDialog dlg;
+	
 	CString strShow = "Loading log file ";
 	strShow += strLogFile;
-	dlg.Show ( strShow );
-
+	m_dlgWait.UpdateText( strShow, bUpdateSize);
+	
 	LogFile logFile;
 
 	logFile.strLogFileName = strLogFile;
@@ -356,12 +359,11 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate)
 		CStringEx strSave = strCurLine;
 		strCurLine = strNextLine;
 
-		SetWindowText(strSave);
+		//SetWindowText(strSave);
 		LogDetail logDetail;
 
 		logDetail.strRawLog = strSave;
-		logDetail.strDate = strSave.Left(10);
-		logDetail.strTime = strSave.Mid(11, 12);
+		logDetail.strDateTime = strSave.Left(23);
 
 		CStringEx sModuleNumber = strSave.GetField("`", 1);
 		int nModuleNumber = sModuleNumber.AsInt();
@@ -448,6 +450,7 @@ void CLogViewerDlg::InitModuleList()
 	AddModule("33", "Oam Server");
 	AddModule("34", "OAM Panel");
 	AddModule("35", "Rule Server");
+	AddModule("36", "Eclipse");
 	AddModule("47", "PDC Sender Server");
 	AddModule("52", "SSCU");
 	AddModule("53", "SSCP Server");
@@ -579,13 +582,13 @@ BOOL CLogViewerDlg::GetLogDir()
 	return TRUE;
 }
 
-void CLogViewerDlg::LoadDayLog(CString strDate)
+void CLogViewerDlg::LoadDayLog(CString strDate, BOOL bUpdateSize)
 {
 	if ( m_bCurrentHour )
 	{
 		CString strHour = m_dtNow.Format("%H");
 		CString strLogFile = m_strLogHome + "\\" + strDate + "\\" + strDate + "-" + strHour + ".log";
-		LoadLogFile((LPTSTR)(LPCTSTR)strLogFile, strDate);
+		LoadLogFile((LPTSTR)(LPCTSTR)strLogFile, strDate, bUpdateSize);
 	}
 	else
 	{
@@ -599,7 +602,7 @@ void CLogViewerDlg::LoadDayLog(CString strDate)
 
 			
 			CString strLogFile = m_strLogHome + "\\" + strDate + "\\" + strDate + "-" + strHour + ".log";
-			LoadLogFile((LPTSTR)(LPCTSTR)strLogFile, strDate);
+			LoadLogFile((LPTSTR)(LPCTSTR)strLogFile, strDate, i == m_nStartHour && bUpdateSize);
 		}
 	}
 }
@@ -655,23 +658,13 @@ void CLogViewerDlg::OnItemClickModuleList(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CLogViewerDlg::OnButtonRefresh()
 {
-	UpdateData();
-	LockWindowUpdate();
-
-	if (GetSelectedModules() == 0 && !m_bExclude)
-	{
-		AfxMessageBox("Please select at least one Module!");
-		return;
-	}
-
-
-	m_nSeverity = 4 - m_comboLogSeverity.GetCurSel();
-
-	m_pLogList->DeleteAllItems();
-
+	BeforeLoad();
 
 	for (int i = 0; i < m_vecLogFile.size(); i++)
 	{
+		CString strShow = "Filtering log file " + m_vecLogFile[i].strLogFileName;
+		m_dlgWait.UpdateText(strShow,  i == 0);
+		
 		for (int j = 0; j < m_vecLogFile[i].vecLog.size(); j++)
 		{
 			if (FilterLog(m_vecLogFile[i].vecLog[j]))
@@ -681,53 +674,28 @@ void CLogViewerDlg::OnButtonRefresh()
 		}
 	}
 
-	UnlockWindowUpdate();
-
-	CString strTitle;
-	strTitle.Format("LogViewer - Total %d logs", m_pLogList->GetItemCount());
-	SetWindowText(strTitle);
+	AfterLoad();
 }
 
 void CLogViewerDlg::OnBnClickedButtonReload()
 {
+	BeforeLoad();
 	m_vecLogFile.clear();
-	m_strLogContains.MakeUpper();
-	
-	UpdateData();
-	LockWindowUpdate();
-
-	if (GetSelectedModules() == 0 && !m_bExclude)
-	{
-		AfxMessageBox("Please select at least one Module!");
-		return;
-	}
-
-
-	m_nSeverity = 4 - m_comboLogSeverity.GetCurSel();
-
-	m_pLogList->DeleteAllItems();
-
-	m_dtNow = COleDateTime::GetCurrentTime();
 	if (m_bToday)
 	{
 		CString strDate = m_dtNow.Format("%Y-%m-%d");
-		LoadDayLog(strDate);
-
+		LoadDayLog(strDate, TRUE);
 	}
 	else
 	{
 		for (COleDateTime dtDay = m_tStartDay; dtDay <= m_tEndDay; dtDay += 1)
 		{
 			CString strDate = dtDay.Format("%Y-%m-%d");
-			LoadDayLog(strDate);
+			LoadDayLog(strDate, dtDay == m_tStartDay);
 		}
 	}
 
-	UnlockWindowUpdate();
-
-	CString strTitle;
-	strTitle.Format("LogViewer - Total %d logs", m_pLogList->GetItemCount());
-	SetWindowText(strTitle);
+	AfterLoad();
 }
 
 
@@ -739,4 +707,37 @@ void CLogViewerDlg::OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult)
 	SetDlgItemText(IDC_EDIT_RAW_LOG, strRawLog);
 	
 	*pResult = 0;
+}
+
+void CLogViewerDlg::BeforeLoad()
+{
+	m_dtNow = COleDateTime::GetCurrentTime();
+	m_dlgWait.Show();
+	UpdateData();
+
+	m_strLogContains.MakeUpper();
+	
+	LockWindowUpdate();
+
+	if (GetSelectedModules() == 0 && !m_bExclude)
+	{
+		AfxMessageBox("Please select at least one Module!");
+		return;
+	}
+
+	m_nSeverity = 4 - m_comboLogSeverity.GetCurSel();
+	m_pLogList->DeleteAllItems();	
+}
+
+
+void CLogViewerDlg::AfterLoad()
+{
+	m_dlgWait.Close();
+	UnlockWindowUpdate();
+
+	COleDateTimeSpan timeSpan = COleDateTime::GetCurrentTime() - m_dtNow;
+	
+	CString strTitle;
+	strTitle.Format("LogViewer - Total %d logs, takes %d seconds.", m_pLogList->GetItemCount(), (int)timeSpan.GetTotalSeconds());
+	SetWindowText(strTitle);
 }

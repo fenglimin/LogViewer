@@ -8,6 +8,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 #include <vector>
+#include "WaitDialog.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CLogViewerDlg dialog
@@ -15,8 +16,7 @@
 struct LogDetail
 {
 	int		nLogSeverity;
-	CString strDate;
-	CString strTime;
+	CString strDateTime;
 	CString strModuleName;
 	int		nModuleNumber;
 	CString	strProcessId;
@@ -47,16 +47,18 @@ public:
 	
 	int		m_nSeverity;
 	COleDateTime m_dtNow;
-	void LoadDayLog(CString strDate);
+	void LoadDayLog(CString strDate, BOOL bUpdateSize);
 	CString m_strLogHome;
 	BOOL GetLogDir();
 	void AddModule(CString strModuleNumber, CString strModuleName);
-
+	void BeforeLoad();
+	void AfterLoad();
+	
 	void EnableHourControl(BOOL bEnable);
 	void EnableDateControl(BOOL bEnable);
 	void InitFilter();
 	void InitModuleList();
-	BOOL LoadLogFile(char* strLogFile, CString strDate);
+	BOOL LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateSize);
 	void InsertLog(const LogDetail& logDetail);
 	CImageList	m_ImageListSmall, m_ImageListNormal;
 	CListCtrl*	m_pLogList;
@@ -67,6 +69,8 @@ public:
 	std::vector<LogFile> m_vecLogFile;
 
 	BOOL FilterLog(const LogDetail& logDetail);
+
+	CWaitDialog m_dlgWait;
 
 // Dialog Data
 	//{{AFX_DATA(CLogViewerDlg)
@@ -113,6 +117,7 @@ protected:
 public:	
 	afx_msg void OnBnClickedButtonReload();
 	afx_msg void OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult);
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -46,24 +46,29 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CWaitDialog message handlers
 
-BOOL CWaitDialog::Show(CString strShowContent )
+void CWaitDialog::Show()
 {
-
-	CPaintDC dc ( this );
-	CSize Size = dc.GetTextExtent ( strShowContent );
-	SetWindowPos ( NULL, 0, 0, Size.cx+70, 60, SWP_NOZORDER|SWP_HIDEWINDOW );
-
-	SetDlgItemText ( IDC_STATIC_SHOW, strShowContent );
-	
 	CenterWindow();
 	ShowWindow ( SW_SHOW );
 	UpdateWindow ();
+}
 
-	return TRUE;
+void CWaitDialog::UpdateText(CString strShowContent, BOOL bUpdateSize)
+{
+	SetDlgItemText(IDC_STATIC_SHOW, strShowContent);
+
+	if (bUpdateSize)
+	{
+		CPaintDC dc(this);
+		CSize Size = dc.GetTextExtent(strShowContent);
+		SetWindowPos(NULL, 0, 0, Size.cx + 70, 60, SWP_NOZORDER);
+
+		CenterWindow();
+	}
 }
 
 void CWaitDialog::Close()
 {
-	DestroyWindow();
+	ShowWindow(SW_HIDE);
 }
 

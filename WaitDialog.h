@@ -16,7 +16,8 @@ class CWaitDialog : public CDialog
 // Construction
 public:
 	void Close();
-	BOOL Show ( CString strShowContent );
+	void Show();
+	void UpdateText(CString strShowContent, BOOL bUpdateSize);
 	CWaitDialog(CWnd* pParent = NULL);   // standard constructor
 	~CWaitDialog();
 // Dialog Data
