@@ -32,7 +32,8 @@
 #define IDC_CHECK_EXCLUDE               1017
 #define IDC_DATETIMEPICKER_END          1018
 #define ID_ACCEPT_RETURN                1019
-#define IDC_EDIT_ERROR_CODE2            1020
+#define IDC_EDIT1                       1019
+#define IDC_EDIT_RAW_LOG                1019
 #define IDC_EDIT_LOG_DIR                1020
 #define IDC_EDIT_PROCESS_ID             1023
 #define IDC_EDIT_THREAD_ID              1024
@@ -43,7 +44,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        138
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1017
+#define _APS_NEXT_CONTROL_VALUE         1020
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

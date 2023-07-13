@@ -7,9 +7,35 @@
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
+#include <vector>
 
 /////////////////////////////////////////////////////////////////////////////
 // CLogViewerDlg dialog
+
+struct LogDetail
+{
+	int		nLogSeverity;
+	CString strDate;
+	CString strTime;
+	CString strModuleName;
+	CString	strModuleNumber;
+	CString	strProcessId;
+	CString	strThreadId;
+	CString	strCode;
+	CString strLogContent;
+	CString strSourceFileName;
+	CString	strLineNumber;
+
+	CString strRawLog;
+};
+
+struct LogFile
+{
+	CString strLogFileName;
+	BOOL	bNeedRefresh;
+	std::vector<LogDetail> vecLog;
+};
+
 
 class CLogViewerDlg : public CDialog
 {
@@ -31,12 +57,14 @@ public:
 	void InitFilter();
 	void InitModuleList();
 	BOOL LoadLogFile(char* strLogFile, CString strDate);
-	void InsertLog(char* sDate, char* sTime, char* sModuleNumber, char* sModuleName, int nLogSeverity, char* sErrorCode, char* sLogInfo,  char* sFile, char* sLineNo);
+	void InsertLog(const LogDetail& logDetail);
 	CImageList	m_ImageListSmall, m_ImageListNormal;
 	CListCtrl*	m_pLogList;
 	CListCtrl*	m_pModuleList;
 	void InitLogList();
 	CLogViewerDlg(CWnd* pParent = NULL);	// standard constructor
+
+	std::vector<LogFile> m_vecLogFile;
 
 // Dialog Data
 	//{{AFX_DATA(CLogViewerDlg)
@@ -82,6 +110,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:	
 	afx_msg void OnBnClickedButtonReload();
+	afx_msg void OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult);
 };
 
 //{{AFX_INSERT_LOCATION}}
