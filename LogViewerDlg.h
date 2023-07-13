@@ -18,7 +18,7 @@ struct LogDetail
 	CString strDate;
 	CString strTime;
 	CString strModuleName;
-	CString	strModuleNumber;
+	int		nModuleNumber;
 	CString	strProcessId;
 	CString	strThreadId;
 	CString	strCode;
@@ -65,6 +65,8 @@ public:
 	CLogViewerDlg(CWnd* pParent = NULL);	// standard constructor
 
 	std::vector<LogFile> m_vecLogFile;
+
+	BOOL FilterLog(const LogDetail& logDetail);
 
 // Dialog Data
 	//{{AFX_DATA(CLogViewerDlg)

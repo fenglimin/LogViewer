@@ -305,42 +305,15 @@ void CLogViewerDlg::InsertLog(const LogDetail& logDetail)
 	m_pLogList->InsertItem(&lvi);
 
 	int nSubItem = 1;
-
-	lvi.iSubItem = nSubItem++;
-	lvi.pszText = (LPTSTR)(LPCTSTR)logDetail.strDate;
-	m_pLogList->SetItem(&lvi);	
-
-	lvi.iSubItem = nSubItem++;
-	lvi.pszText = (LPTSTR)(LPCTSTR)logDetail.strTime;
-	m_pLogList->SetItem(&lvi);	
-
-	lvi.iSubItem = nSubItem++;
-	lvi.pszText = (LPTSTR)(LPCTSTR)logDetail.strModuleName;
-	m_pLogList->SetItem(&lvi);	
-
-	lvi.iSubItem = nSubItem++;
-	lvi.pszText = (LPTSTR)(LPCTSTR)logDetail.strLogContent;
-	m_pLogList->SetItem(&lvi);	
-
-	lvi.iSubItem = nSubItem++;
-	lvi.pszText = (LPTSTR)(LPCTSTR)logDetail.strCode;
-	m_pLogList->SetItem(&lvi);
-
-	lvi.iSubItem = nSubItem++;
-	lvi.pszText = (LPTSTR)(LPCTSTR)logDetail.strSourceFileName;
-	m_pLogList->SetItem(&lvi);	
-
-	lvi.iSubItem = nSubItem++;
-	lvi.pszText = (LPTSTR)(LPCTSTR)logDetail.strLineNumber;
-	m_pLogList->SetItem(&lvi);
-
-	lvi.iSubItem = nSubItem++;
-	lvi.pszText = (LPTSTR)(LPCTSTR)logDetail.strModuleNumber;
-	m_pLogList->SetItem(&lvi);
-
-	lvi.iSubItem = nSubItem++;
-	lvi.pszText = (LPTSTR)(LPCTSTR)logDetail.strRawLog;
-	m_pLogList->SetItem(&lvi);
+	m_pLogList->SetItemText(0, nSubItem++, logDetail.strDate);
+	m_pLogList->SetItemText(0, nSubItem++, logDetail.strTime);
+	m_pLogList->SetItemText(0, nSubItem++, logDetail.strModuleName);
+	m_pLogList->SetItemText(0, nSubItem++, logDetail.strLogContent);
+	m_pLogList->SetItemText(0, nSubItem++, logDetail.strCode);
+	m_pLogList->SetItemText(0, nSubItem++, logDetail.strSourceFileName);
+	m_pLogList->SetItemText(0, nSubItem++, logDetail.strLineNumber);
+	m_pLogList->SetItemText(0, nSubItem++, CStringEx(logDetail.nModuleNumber));
+	m_pLogList->SetItemText(0, nSubItem++, logDetail.strRawLog);
 }
 
 BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate)
@@ -397,18 +370,7 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate)
 			sModuleNumber = "0";
 			nModuleNumber = 0;
 		}
-		logDetail.strModuleNumber = sModuleNumber;
-		
-		if ( !m_bExclude )
-		{
-			if ( m_bCheckModule && m_saModules[nModuleNumber] == "")
-				continue;
-		}
-		else
-		{
-			if ( m_saModules[nModuleNumber] != "")
-				continue;
-		}
+		logDetail.nModuleNumber = nModuleNumber;
 		
 		CString strModuleName = strSave.GetField("`", 2);
 		logDetail.strModuleName = m_saModules[nModuleNumber];
@@ -416,29 +378,17 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate)
 			logDetail.strModuleName = strModuleName;
 
 		logDetail.nLogSeverity = strSave.GetField("`", 3).AsInt();
-		if (logDetail.nLogSeverity < m_nSeverity)
-			continue;
-		
-		CStringEx sErrorCode = strSave.GetField("`", 4);
-		if ( m_strErrorCode != "" && m_strErrorCode != sErrorCode)
-			continue;
-		logDetail.strCode = sErrorCode;
-		
+		logDetail.strCode = strSave.GetField("`", 4);
 		logDetail.strLogContent = strSave.GetField("`", 5);
-		if ( m_strLogContains != "" )
-		{
-			CString strTemp = logDetail.strLogContent;
-			strTemp.MakeUpper();
-			m_strLogContains.MakeUpper();
-			if ( strTemp.Find(m_strLogContains) == -1 )
-				continue;
-		}
-		
 		logDetail.strSourceFileName = strSave.GetField("`", 7);
 		logDetail.strLineNumber = strSave.GetField("`", 8);
 
-		InsertLog(logDetail);
 		logFile.vecLog.push_back(logDetail);
+
+		if (FilterLog(logDetail))
+		{
+			InsertLog(logDetail);
+		}
 	}
 
 	ifs.close();
@@ -447,36 +397,34 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate)
 	return TRUE;
 }
 
-void CLogViewerDlg::OnButtonRefresh() 
+BOOL CLogViewerDlg::FilterLog(const LogDetail& logDetail)
 {
-	UpdateData();
-	LockWindowUpdate();
-
-	if (GetSelectedModules() == 0 && !m_bExclude)
+	if (!m_bExclude)
 	{
-		AfxMessageBox("Please select at least one Module!");
-		return;
+		if (m_bCheckModule && m_saModules[logDetail.nModuleNumber] == "")
+			return FALSE;
+	}
+	else
+	{
+		if (m_saModules[logDetail.nModuleNumber] != "")
+			return FALSE;
 	}
 
+	if (logDetail.nLogSeverity < m_nSeverity)
+		return FALSE;
 
-	m_nSeverity = 4 - m_comboLogSeverity.GetCurSel();
+	if (m_strErrorCode != "" && m_strErrorCode != logDetail.strCode)
+		return FALSE;
 
-	m_pLogList->DeleteAllItems();
-
-
-	for (int i = 0; i < m_vecLogFile.size(); i++)
+	if (m_strLogContains != "")
 	{
-		for (int j = 0; j < m_vecLogFile[i].vecLog.size(); j++)
-		{
-			InsertLog(m_vecLogFile[i].vecLog[j]);
-		}
+		CString strTemp = logDetail.strLogContent;
+		strTemp.MakeUpper();
+		if (strTemp.Find(m_strLogContains) == -1)
+			return FALSE;
 	}
 
-	UnlockWindowUpdate();
-
-	CString strTitle;
-	strTitle.Format("LogViewer - Total %d logs", m_pLogList->GetItemCount());
-	SetWindowText(strTitle);
+	return TRUE;
 }
 
 void CLogViewerDlg::InitModuleList()
@@ -705,10 +653,45 @@ void CLogViewerDlg::OnItemClickModuleList(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
+void CLogViewerDlg::OnButtonRefresh()
+{
+	UpdateData();
+	LockWindowUpdate();
+
+	if (GetSelectedModules() == 0 && !m_bExclude)
+	{
+		AfxMessageBox("Please select at least one Module!");
+		return;
+	}
+
+
+	m_nSeverity = 4 - m_comboLogSeverity.GetCurSel();
+
+	m_pLogList->DeleteAllItems();
+
+
+	for (int i = 0; i < m_vecLogFile.size(); i++)
+	{
+		for (int j = 0; j < m_vecLogFile[i].vecLog.size(); j++)
+		{
+			if (FilterLog(m_vecLogFile[i].vecLog[j]))
+			{
+				InsertLog(m_vecLogFile[i].vecLog[j]);
+			}
+		}
+	}
+
+	UnlockWindowUpdate();
+
+	CString strTitle;
+	strTitle.Format("LogViewer - Total %d logs", m_pLogList->GetItemCount());
+	SetWindowText(strTitle);
+}
 
 void CLogViewerDlg::OnBnClickedButtonReload()
 {
 	m_vecLogFile.clear();
+	m_strLogContains.MakeUpper();
 	
 	UpdateData();
 	LockWindowUpdate();
