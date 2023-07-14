@@ -26,7 +26,6 @@ CWaitDialog::CWaitDialog(CWnd* pParent /*=NULL*/)
 
 CWaitDialog::~CWaitDialog()
 {
-	DestroyWindow();
 }
 
 void CWaitDialog::DoDataExchange(CDataExchange* pDX)
@@ -63,7 +62,7 @@ void CWaitDialog::UpdateText(CString strShowContent, BOOL bUpdateSize)
 		CSize Size = dc.GetTextExtent(strShowContent);
 		SetWindowPos(NULL, 0, 0, Size.cx + 70, 60, SWP_NOZORDER);
 
-		CenterWindow();
+		Show();
 	}
 }
 

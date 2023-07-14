@@ -82,11 +82,15 @@ public:
 	COleDateTime	m_tStartDay;
 	CString	m_strErrorCode;
 	CString	m_strLogContains;
+	CString	m_strProcessId;
+	CString	m_strThreadId;
 	BOOL	m_bCurrentHour;
 	BOOL	m_bToday;
 	int		m_nEndHour;
 	int		m_nStartHour;
 	BOOL	m_bExclude;
+	int		m_nErrorCount;
+	int		m_nWarningCount;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides

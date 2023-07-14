@@ -94,6 +94,8 @@ void CLogViewerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_DateTimeCtrl(pDX, IDC_DATETIMEPICKER_START, m_tStartDay);
 	DDX_Text(pDX, IDC_EDIT_ERROR_CODE, m_strErrorCode);
 	DDX_Text(pDX, IDC_EDIT_LOG_CONTAINS, m_strLogContains);
+	DDX_Text(pDX, IDC_EDIT_PROCESS_ID, m_strProcessId);
+	DDX_Text(pDX, IDC_EDIT_THREAD_ID, m_strThreadId);
 	DDX_Check(pDX, IDC_CHECK_CURRENT_HOUR, m_bCurrentHour);
 	DDX_Check(pDX, IDC_CHECK_TODAY, m_bToday);
 	DDX_Text(pDX, IDC_EDIT_END_HOUR, m_nEndHour);
@@ -280,10 +282,12 @@ void CLogViewerDlg::InitLogList()
 	m_pLogList->InsertColumn(nCol++, " ", LVCFMT_LEFT, 20);
 	m_pLogList->InsertColumn(nCol++, "Log Time", LVCFMT_LEFT, 150);
 	m_pLogList->InsertColumn(nCol++, "ModuleName", LVCFMT_LEFT, 90);
-	m_pLogList->InsertColumn(nCol++, "Log Content", LVCFMT_LEFT, 600);
+	m_pLogList->InsertColumn(nCol++, "PID", LVCFMT_LEFT, 50);
+	m_pLogList->InsertColumn(nCol++, "TID", LVCFMT_LEFT, 50);
+	m_pLogList->InsertColumn(nCol++, "Log Content", LVCFMT_LEFT, 580);
 	m_pLogList->InsertColumn(nCol++, "Code", LVCFMT_LEFT, 50);
 	m_pLogList->InsertColumn(nCol++, "File", LVCFMT_LEFT, 60);
-	m_pLogList->InsertColumn(nCol++, "LineNo", LVCFMT_LEFT, 60);
+	m_pLogList->InsertColumn(nCol++, "LineNo", LVCFMT_LEFT, 50);
 	m_pLogList->InsertColumn(nCol++, "MN", LVCFMT_LEFT, 30);
 	m_pLogList->InsertColumn(nCol++, "Raw Log", LVCFMT_LEFT, 0);
 
@@ -307,10 +311,16 @@ void CLogViewerDlg::InsertLog(const LogDetail& logDetail)
 {
 	int nItem = m_pLogList->GetItemCount();
 	m_pLogList->InsertItem(nItem, "", logDetail.nLogSeverity);
+	if (logDetail.nLogSeverity >= 3)
+		m_nErrorCount++;
+	else if (logDetail.nLogSeverity == 2)
+		m_nWarningCount++;
 
 	int nSubItem = 1;
 	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strDateTime);
 	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strModuleName);
+	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strProcessId);
+	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strThreadId);
 	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strLogContent);
 	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strCode);
 	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strSourceFileName);
@@ -381,7 +391,13 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 
 		logDetail.nLogSeverity = strSave.GetField("`", 3).AsInt();
 		logDetail.strCode = strSave.GetField("`", 4);
+		logDetail.strProcessId = strSave.GetDelimitedField("PID:", ",", 0);
+		logDetail.strThreadId = strSave.GetDelimitedField("TID:", ",", 0);
 		logDetail.strLogContent = strSave.GetField("`", 5);
+		if (!logDetail.strProcessId.IsEmpty())
+		{
+			logDetail.strLogContent = logDetail.strLogContent.Right(logDetail.strLogContent.GetLength() - logDetail.strProcessId.GetLength() - logDetail.strThreadId.GetLength() - 11);
+		}
 		logDetail.strSourceFileName = strSave.GetField("`", 7);
 		logDetail.strLineNumber = strSave.GetField("`", 8);
 
@@ -423,6 +439,18 @@ BOOL CLogViewerDlg::FilterLog(const LogDetail& logDetail)
 		CString strTemp = logDetail.strLogContent;
 		strTemp.MakeUpper();
 		if (strTemp.Find(m_strLogContains) == -1)
+			return FALSE;
+	}
+
+	if (m_strProcessId != "")
+	{
+		if (logDetail.strProcessId.Find(m_strProcessId) == -1)
+			return FALSE;
+	}
+	
+	if (m_strThreadId != "")
+	{
+		if (logDetail.strThreadId.Find(m_strThreadId) == -1)
 			return FALSE;
 	}
 
@@ -703,7 +731,7 @@ void CLogViewerDlg::OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 
-	CString strRawLog = m_pLogList->GetItemText(pNMLV->iItem, 9);
+	CString strRawLog = m_pLogList->GetItemText(pNMLV->iItem, 10);
 	SetDlgItemText(IDC_EDIT_RAW_LOG, strRawLog);
 	
 	*pResult = 0;
@@ -711,13 +739,16 @@ void CLogViewerDlg::OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CLogViewerDlg::BeforeLoad()
 {
+	m_nErrorCount = 0;
+	m_nWarningCount = 0;
 	m_dtNow = COleDateTime::GetCurrentTime();
 	m_dlgWait.Show();
 	UpdateData();
 
 	m_strLogContains.MakeUpper();
-	
-	LockWindowUpdate();
+
+	m_pLogList->SetRedraw(FALSE);// LockWindowUpdate();
+
 
 	if (GetSelectedModules() == 0 && !m_bExclude)
 	{
@@ -733,11 +764,11 @@ void CLogViewerDlg::BeforeLoad()
 void CLogViewerDlg::AfterLoad()
 {
 	m_dlgWait.Close();
-	UnlockWindowUpdate();
+	m_pLogList->SetRedraw(TRUE);//UnlockWindowUpdate();
 
 	COleDateTimeSpan timeSpan = COleDateTime::GetCurrentTime() - m_dtNow;
 	
 	CString strTitle;
-	strTitle.Format("LogViewer - Total %d logs, takes %d seconds.", m_pLogList->GetItemCount(), (int)timeSpan.GetTotalSeconds());
+	strTitle.Format("LogViewer - Total %d logs, %d Error logs, %d Warning logs, takes %d seconds.", m_pLogList->GetItemCount(), m_nErrorCount, m_nWarningCount, (int)timeSpan.GetTotalSeconds());
 	SetWindowText(strTitle);
 }
