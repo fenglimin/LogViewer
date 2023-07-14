@@ -91,6 +91,7 @@ public:
 	BOOL	m_bExclude;
 	int		m_nErrorCount;
 	int		m_nWarningCount;
+	CString m_strSearch;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -122,6 +123,7 @@ public:
 	afx_msg void OnBnClickedButtonReload();
 	afx_msg void OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnEnChangeEditSearch();
 };
 
 //{{AFX_INSERT_LOCATION}}

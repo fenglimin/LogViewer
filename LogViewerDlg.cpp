@@ -96,6 +96,7 @@ void CLogViewerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_LOG_CONTAINS, m_strLogContains);
 	DDX_Text(pDX, IDC_EDIT_PROCESS_ID, m_strProcessId);
 	DDX_Text(pDX, IDC_EDIT_THREAD_ID, m_strThreadId);
+	DDX_Text(pDX, IDC_EDIT_SEARCH, m_strSearch);
 	DDX_Check(pDX, IDC_CHECK_CURRENT_HOUR, m_bCurrentHour);
 	DDX_Check(pDX, IDC_CHECK_TODAY, m_bToday);
 	DDX_Text(pDX, IDC_EDIT_END_HOUR, m_nEndHour);
@@ -122,6 +123,7 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	
 	ON_BN_CLICKED(IDC_BUTTON_RELOAD, &CLogViewerDlg::OnBnClickedButtonReload)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_LOG, &CLogViewerDlg::OnLvnItemchangedListLog)
+	ON_EN_CHANGE(IDC_EDIT_SEARCH, &CLogViewerDlg::OnEnChangeEditSearch)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -771,4 +773,33 @@ void CLogViewerDlg::AfterLoad()
 	CString strTitle;
 	strTitle.Format("LogViewer - Total %d logs, %d Error logs, %d Warning logs, takes %d seconds.", m_pLogList->GetItemCount(), m_nErrorCount, m_nWarningCount, (int)timeSpan.GetTotalSeconds());
 	SetWindowText(strTitle);
+}
+
+void CLogViewerDlg::OnEnChangeEditSearch()
+{
+	GetDlgItemText(IDC_EDIT_SEARCH, m_strSearch);
+	m_strSearch.MakeUpper();
+	
+	int nCount = m_pLogList->GetItemCount();
+	int nFirstItem = -1;
+	for (int i = 0; i < nCount; i++)
+	{
+		if (m_pLogList->GetItemText(i, 5).MakeUpper().Find(m_strSearch) != -1)
+		{
+			m_pLogList->SetItemState(i, LVIS_SELECTED, LVIS_SELECTED);
+			if (nFirstItem == -1)
+			{
+				nFirstItem = i;
+			}
+		}
+		else
+		{
+			m_pLogList->SetItemState(i, 0, LVIS_SELECTED);
+		}
+	}
+
+	if (nFirstItem != -1)
+	{
+		m_pLogList->EnsureVisible(nFirstItem, TRUE);
+	}
 }
