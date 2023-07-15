@@ -34,10 +34,14 @@
 #define ID_ACCEPT_RETURN                1019
 #define IDC_EDIT_RAW_LOG                1019
 #define IDC_EDIT_LOG_DIR                1020
-#define IDC_EDIT_LOG_DIR2               1021
 #define IDC_EDIT_SEARCH                 1021
+#define IDC_STATIC_SEARCH_RESULT        1022
 #define IDC_EDIT_PROCESS_ID             1023
 #define IDC_EDIT_THREAD_ID              1024
+#define IDC_BUTTON_HIGHLIGHT_FIRST      1025
+#define IDC_BUTTON_HIGHLIGHT_PREV       1026
+#define IDC_BUTTON_HIGHLIGHT_NEXT       1027
+#define IDC_BUTTON_HIGHLIGHT_FIRSTIDC_BUTTON_HIGHLIGHT_FIRSTIDC_BUTTON_HIGHLIGHT_LAST 1028
 
 // Next default values for new objects
 // 
@@ -45,7 +49,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        139
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1020
+#define _APS_NEXT_CONTROL_VALUE         1023
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

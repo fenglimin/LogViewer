@@ -83,6 +83,11 @@ CLogViewerDlg::CLogViewerDlg(CWnd* pParent /*=NULL*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
+CLogViewerDlg::~CLogViewerDlg()
+{
+	CleanMemory();
+}
+
 void CLogViewerDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
@@ -124,6 +129,10 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_RELOAD, &CLogViewerDlg::OnBnClickedButtonReload)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_LOG, &CLogViewerDlg::OnLvnItemchangedListLog)
 	ON_EN_CHANGE(IDC_EDIT_SEARCH, &CLogViewerDlg::OnEnChangeEditSearch)
+	ON_BN_CLICKED(IDC_BUTTON_HIGHLIGHT_FIRST, &CLogViewerDlg::OnBnClickedButtonHighlightFirst)
+	ON_BN_CLICKED(IDC_BUTTON_HIGHLIGHT_PREV, &CLogViewerDlg::OnBnClickedButtonHighlightPrev)
+	ON_BN_CLICKED(IDC_BUTTON_HIGHLIGHT_NEXT, &CLogViewerDlg::OnBnClickedButtonHighlightNext)
+	ON_BN_CLICKED(IDC_BUTTON_HIGHLIGHT_FIRSTIDC_BUTTON_HIGHLIGHT_FIRSTIDC_BUTTON_HIGHLIGHT_LAST, &CLogViewerDlg::OnBnClickedButtonHighlightLast)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -213,13 +222,22 @@ void CLogViewerDlg::OnPaint()
 
 BOOL CLogViewerDlg::PreTranslateMessage(MSG* pMsg)
 {
-	if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_ESCAPE)
+	if (pMsg->message == WM_KEYDOWN)
 	{
-		return TRUE;
+		if (pMsg->wParam == VK_ESCAPE)
+			return TRUE;
+
+		if (pMsg->wParam == VK_RETURN)
+		{
+			OnReturnPressed(GetKeyState(VK_CONTROL) & 0x8000, GetKeyState(VK_SHIFT) & 0x8000);
+			return TRUE;
+		}
 	}
 
 	return __super::PreTranslateMessage(pMsg);
 }
+
+
 
 
 // The system calls this to obtain the cursor to display while the user drags
@@ -262,6 +280,16 @@ void CLogViewerDlg::OnCustomDrawListCtrl(NMHDR* pNMHDR, LRESULT* pResult)
 			{
 				pLVCD->clrText = RGB(153, 102, 0);
 			}
+
+			LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(itemIndex);
+			if (pLogStatus->bQueried)
+			{
+				pLVCD->clrTextBk = pLogStatus->bHighlighted? RGB(0, 190, 190) : RGB(0, 240, 240);
+			}
+			else
+			{
+				pLVCD->clrTextBk = RGB(255, 255, 255);
+			}	
 		}		
 
 		*pResult = CDRF_NEWFONT;
@@ -329,6 +357,8 @@ void CLogViewerDlg::InsertLog(const LogDetail& logDetail)
 	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strLineNumber);
 	m_pLogList->SetItemText(nItem, nSubItem++, CStringEx(logDetail.nModuleNumber));
 	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strRawLog);
+
+	m_pLogList->SetItemData(nItem, (DWORD_PTR)logDetail.pLogStatus);
 }
 
 BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateSize)
@@ -403,18 +433,28 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 		logDetail.strSourceFileName = strSave.GetField("`", 7);
 		logDetail.strLineNumber = strSave.GetField("`", 8);
 
+		logDetail.pLogStatus = new LogStatus();
 		logFile.vecLog.push_back(logDetail);
 
-		if (FilterLog(logDetail))
-		{
-			InsertLog(logDetail);
-		}
+		ProcessLog(logDetail);
 	}
 
 	ifs.close();
 
 	m_vecLogFile.push_back(logFile);
 	return TRUE;
+}
+
+void CLogViewerDlg::ProcessLog(const LogDetail& logDetail)
+{
+	logDetail.pLogStatus->bFiltered = FilterLog(logDetail);
+	logDetail.pLogStatus->bQueried = FALSE;
+	logDetail.pLogStatus->bHighlighted = FALSE;
+
+	if (logDetail.pLogStatus->bFiltered)
+	{
+		InsertLog(logDetail);
+	}
 }
 
 BOOL CLogViewerDlg::FilterLog(const LogDetail& logDetail)
@@ -697,19 +737,29 @@ void CLogViewerDlg::OnButtonRefresh()
 		
 		for (int j = 0; j < m_vecLogFile[i].vecLog.size(); j++)
 		{
-			if (FilterLog(m_vecLogFile[i].vecLog[j]))
-			{
-				InsertLog(m_vecLogFile[i].vecLog[j]);
-			}
+			ProcessLog(m_vecLogFile[i].vecLog[j]);
 		}
 	}
 
 	AfterLoad();
 }
 
+void CLogViewerDlg::CleanMemory()
+{
+	for (int i = 0; i < m_vecLogFile.size(); i++)
+	{
+		for (int j = 0; j < m_vecLogFile[i].vecLog.size(); j++)
+		{
+			delete m_vecLogFile[i].vecLog[j].pLogStatus;
+		}
+	}
+}
+
 void CLogViewerDlg::OnBnClickedButtonReload()
 {
 	BeforeLoad();
+	CleanMemory();
+	
 	m_vecLogFile.clear();
 	if (m_bToday)
 	{
@@ -733,11 +783,18 @@ void CLogViewerDlg::OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 
-	CString strRawLog = m_pLogList->GetItemText(pNMLV->iItem, 10);
-	SetDlgItemText(IDC_EDIT_RAW_LOG, strRawLog);
+	SetRawLogContent(pNMLV->iItem);
 	
 	*pResult = 0;
 }
+
+void CLogViewerDlg::SetRawLogContent(int nItem)
+{
+	CString strRawLog = nItem != -1? m_pLogList->GetItemText(nItem, 10) : "";
+	SetDlgItemText(IDC_EDIT_RAW_LOG, strRawLog);
+
+}
+
 
 void CLogViewerDlg::BeforeLoad()
 {
@@ -768,6 +825,8 @@ void CLogViewerDlg::AfterLoad()
 	m_dlgWait.Close();
 	m_pLogList->SetRedraw(TRUE);//UnlockWindowUpdate();
 
+	OnEnChangeEditSearch();
+	
 	COleDateTimeSpan timeSpan = COleDateTime::GetCurrentTime() - m_dtNow;
 	
 	CString strTitle;
@@ -779,27 +838,112 @@ void CLogViewerDlg::OnEnChangeEditSearch()
 {
 	GetDlgItemText(IDC_EDIT_SEARCH, m_strSearch);
 	m_strSearch.MakeUpper();
+	m_strSearch.Trim();
+
+	m_vecHitedLine.clear();
 	
 	int nCount = m_pLogList->GetItemCount();
-	int nFirstItem = -1;
 	for (int i = 0; i < nCount; i++)
 	{
-		if (m_pLogList->GetItemText(i, 5).MakeUpper().Find(m_strSearch) != -1)
+		BOOL bNeedRedraw;
+		LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(i);
+		if (!m_strSearch.IsEmpty() && m_pLogList->GetItemText(i, 5).MakeUpper().Find(m_strSearch) != -1)
 		{
-			m_pLogList->SetItemState(i, LVIS_SELECTED, LVIS_SELECTED);
-			if (nFirstItem == -1)
-			{
-				nFirstItem = i;
-			}
+			bNeedRedraw = !pLogStatus->bQueried;
+			pLogStatus->bQueried = TRUE;
+			m_vecHitedLine.push_back(i);
 		}
 		else
 		{
-			m_pLogList->SetItemState(i, 0, LVIS_SELECTED);
+			bNeedRedraw = pLogStatus->bQueried;
+			pLogStatus->bQueried = FALSE;
+		}
+
+		if (bNeedRedraw || pLogStatus->bHighlighted)
+		{
+			pLogStatus->bHighlighted = FALSE;
+			m_pLogList->RedrawItems(i, i);
 		}
 	}
 
-	if (nFirstItem != -1)
+	int nCurrentHighlightedItemIndex = m_vecHitedLine.size() > 0 ? 0 : -1;
+	ChangeHighlightedItem(nCurrentHighlightedItemIndex);	
+}
+
+void CLogViewerDlg::OnReturnPressed(BOOL bCtrlPressed, BOOL bShiftPressed)
+{
+	CWnd* pFocusCtrl = GetFocus();
+	
+	if ( pFocusCtrl == GetDlgItem(IDC_EDIT_SEARCH))
 	{
-		m_pLogList->EnsureVisible(nFirstItem, TRUE);
+		if (bCtrlPressed)
+		{
+			if (bShiftPressed)
+				OnBnClickedButtonHighlightFirst();
+			else
+				OnBnClickedButtonHighlightPrev();
+		}
+		else
+		{
+			if (bShiftPressed)
+				OnBnClickedButtonHighlightLast();
+			else
+				OnBnClickedButtonHighlightNext();
+		}		
 	}
+}
+
+void CLogViewerDlg::ChangeHighlightedItem(int nNewItemIndex)
+{
+	if (m_vecHitedLine.size() == 0)
+	{
+		SetDlgItemText(IDC_STATIC_SEARCH_RESULT, "0/0");
+	}
+	
+	if (nNewItemIndex < 0 || nNewItemIndex >= m_vecHitedLine.size())
+	{
+		SetRawLogContent(-1);
+		return;
+	}
+
+	if (m_nCurrentHighlightedItemIndex >= 0 && m_nCurrentHighlightedItemIndex < m_vecHitedLine.size())
+	{
+		LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(m_vecHitedLine[m_nCurrentHighlightedItemIndex]);
+		pLogStatus->bHighlighted = FALSE;
+		m_pLogList->RedrawItems(m_vecHitedLine[m_nCurrentHighlightedItemIndex], m_vecHitedLine[m_nCurrentHighlightedItemIndex]);
+	}
+
+	m_nCurrentHighlightedItemIndex = nNewItemIndex;
+	LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(m_vecHitedLine[m_nCurrentHighlightedItemIndex]);
+	pLogStatus->bHighlighted = TRUE;
+	m_pLogList->RedrawItems(m_vecHitedLine[m_nCurrentHighlightedItemIndex], m_vecHitedLine[m_nCurrentHighlightedItemIndex]);
+	m_pLogList->EnsureVisible(m_vecHitedLine[m_nCurrentHighlightedItemIndex], TRUE);
+	SetRawLogContent(m_vecHitedLine[m_nCurrentHighlightedItemIndex]);
+
+	CString strResult;
+	strResult.Format("%d/%d", m_nCurrentHighlightedItemIndex + 1, (int)m_vecHitedLine.size());
+	SetDlgItemText(IDC_STATIC_SEARCH_RESULT, strResult);
+}
+
+void CLogViewerDlg::OnBnClickedButtonHighlightFirst()
+{
+	ChangeHighlightedItem(0);
+}
+
+
+void CLogViewerDlg::OnBnClickedButtonHighlightPrev()
+{
+	ChangeHighlightedItem(m_nCurrentHighlightedItemIndex - 1);
+}
+
+
+void CLogViewerDlg::OnBnClickedButtonHighlightNext()
+{
+	ChangeHighlightedItem(m_nCurrentHighlightedItemIndex + 1);
+}
+
+
+void CLogViewerDlg::OnBnClickedButtonHighlightLast()
+{
+	ChangeHighlightedItem(m_vecHitedLine.size() - 1);
 }
