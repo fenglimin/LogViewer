@@ -940,7 +940,7 @@ void CLogViewerDlg::AfterLoad()
 		m_pLogList->SetItemState(m_nItemForLastSelectedRawLog, LVIS_SELECTED, LVIS_SELECTED);
 	}
 
-	m_pLogList->SetFocus();
+	//m_pLogList->SetFocus();
 }
 
 void CLogViewerDlg::OnEnChangeEditSearch()
@@ -999,6 +999,13 @@ void CLogViewerDlg::OnReturnPressed(BOOL bCtrlPressed, BOOL bShiftPressed)
 			else
 				OnBnClickedButtonHighlightNext();
 		}		
+	}
+	else if (pFocusCtrl == GetDlgItem(IDC_EDIT_ERROR_CODE) ||
+		pFocusCtrl == GetDlgItem(IDC_EDIT_LOG_CONTAINS) ||
+		pFocusCtrl == GetDlgItem(IDC_EDIT_PROCESS_ID) ||
+		pFocusCtrl == GetDlgItem(IDC_EDIT_THREAD_ID))
+	{
+		OnButtonRefresh();
 	}
 }
 
