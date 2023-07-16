@@ -87,6 +87,7 @@ CLogViewerDlg::CLogViewerDlg(CWnd* pParent /*=NULL*/)
 	m_bExclude = FALSE;
 	m_nItemForLastSelectedRawLog = -1;
 	m_bWorking = FALSE;
+	m_bLatestConsoleStartup = FALSE;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -113,6 +114,7 @@ void CLogViewerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_SEARCH, m_strSearch);
 	DDX_Check(pDX, IDC_CHECK_CURRENT_HOUR, m_bCurrentHour);
 	DDX_Check(pDX, IDC_CHECK_TODAY, m_bToday);
+	DDX_Check(pDX, IDC_CHECK_LATEST_CONSOLE_STARTUP, m_bLatestConsoleStartup);
 	DDX_Text(pDX, IDC_EDIT_END_HOUR, m_nEndHour);
 	DDV_MinMaxInt(pDX, m_nEndHour, 0, 23);
 	DDX_Text(pDX, IDC_EDIT_START_HOUR, m_nStartHour);
@@ -143,7 +145,8 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_HIGHLIGHT_NEXT, &CLogViewerDlg::OnBnClickedButtonHighlightNext)
 	ON_BN_CLICKED(IDC_BUTTON_HIGHLIGHT_LAST, &CLogViewerDlg::OnBnClickedButtonHighlightLast)
 	ON_BN_CLICKED(IDC_BUTTON_CLEAR, &CLogViewerDlg::OnBnClickedButtonClear)
-	ON_BN_CLICKED(IDC_BUTTON_LATEST_CONSOLE_STARTUP, &CLogViewerDlg::OnBnClickedButtonLatestConsoleStartup)
+	ON_BN_CLICKED(IDC_BUTTON_LATEST_CONSOLE_STARTUP, &CLogViewerDlg::FilterLatestConsoleStartup)
+	ON_BN_CLICKED(IDC_CHECK_LATEST_CONSOLE_STARTUP, &CLogViewerDlg::OnBnClickedCheckLatestConsoleStartup)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -752,16 +755,23 @@ void CLogViewerDlg::OnButtonRefresh()
 {
 	BeforeLoad();
 
-	for (int i = 0; i < m_vecLogFile.size(); i++)
+	if (m_bLatestConsoleStartup)
 	{
-		CString strShow = "Filtering log file " + m_vecLogFile[i].strLogFileName;
-		m_dlgWait.UpdateText(strShow,  i == 0);
-		
-		for (int j = 0; j < m_vecLogFile[i].vecLog.size(); j++)
-		{
-			ProcessLog(m_vecLogFile[i].vecLog[j]);
-		}
+		FilterLatestConsoleStartup();
 	}
+	else
+	{
+		for (int i = 0; i < m_vecLogFile.size(); i++)
+		{
+			CString strShow = "Filtering log file " + m_vecLogFile[i].strLogFileName;
+			m_dlgWait.UpdateText(strShow, i == 0);
+
+			for (int j = 0; j < m_vecLogFile[i].vecLog.size(); j++)
+			{
+				ProcessLog(m_vecLogFile[i].vecLog[j]);
+			}
+		}
+	}	
 
 	AfterLoad();
 }
@@ -993,7 +1003,40 @@ void CLogViewerDlg::OnBnClickedButtonClear()
 }
 
 
-void CLogViewerDlg::OnBnClickedButtonLatestConsoleStartup()
+void CLogViewerDlg::FilterLatestConsoleStartup()
 {
-	
+	BOOL bFound = FALSE;
+	int nStartFileIndex;
+	int nStartLineIndex;
+	for (nStartFileIndex = m_vecLogFile.size() - 1; nStartFileIndex >= 0; nStartFileIndex--)
+	{
+		for (nStartLineIndex = m_vecLogFile[nStartFileIndex].vecLog.size() - 1; nStartLineIndex >= 0; nStartLineIndex--)
+		{
+			if (m_vecLogFile[nStartFileIndex].vecLog[nStartLineIndex].strLogContent == "lcpacs, start to check Win10 system and kill the background instances.")
+			{
+				bFound = TRUE;
+				break;
+			}
+		}
+
+		if (bFound)
+			break;
+	}
+
+	for (int i = nStartFileIndex; i < m_vecLogFile.size(); i++)
+	{
+		CString strShow = "Filtering log file " + m_vecLogFile[i].strLogFileName;
+		m_dlgWait.UpdateText(strShow, i == 0);
+
+		int j = i == nStartFileIndex ? nStartLineIndex : 0;
+		for (; j < m_vecLogFile[i].vecLog.size(); j++)
+		{
+			ProcessLog(m_vecLogFile[i].vecLog[j]);
+		}
+	}
+}
+
+void CLogViewerDlg::OnBnClickedCheckLatestConsoleStartup()
+{
+	OnButtonRefresh();
 }

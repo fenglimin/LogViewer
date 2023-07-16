@@ -43,8 +43,9 @@
 #define IDC_BUTTON_HIGHLIGHT_NEXT       1027
 #define IDC_BUTTON_HIGHLIGHT_LAST       1028
 #define IDC_BUTTON_CLEAR                1029
-#define IDC_BUTTON_CLEAR2               1030
-#define IDC_BUTTON_LATEST_CONSOLE_STARTUP 1030
+#define IDC_CHECK_LATEST_CONSOLE_STARTUP 1031
+#define IDC_CHECK_LATEST_CONSOLE_STARTUP2 1032
+#define IDC_CHECK_USER_ACTIONS          1032
 
 // Next default values for new objects
 // 
@@ -52,7 +53,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        139
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1023
+#define _APS_NEXT_CONTROL_VALUE         1032
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

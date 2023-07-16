@@ -108,6 +108,7 @@ public:
 	CString	m_strLastSelectedRawLog;
 	int		m_nItemForLastSelectedRawLog;
 	BOOL	m_bWorking;
+	BOOL	m_bLatestConsoleStartup;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -135,7 +136,8 @@ protected:
 	afx_msg void OnCustomDrawListCtrl(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
-public:	
+public:
+	void FilterLatestConsoleStartup();
 	void CleanMemory();
 	void OnBnClickedButtonReload();
 	afx_msg void OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult);
@@ -148,7 +150,7 @@ public:
 	afx_msg void OnBnClickedButtonHighlightNext();
 	afx_msg void OnBnClickedButtonHighlightLast();
 	afx_msg void OnBnClickedButtonClear();
-	afx_msg void OnBnClickedButtonLatestConsoleStartup();
+	afx_msg void OnBnClickedCheckLatestConsoleStartup();
 };
 
 //{{AFX_INSERT_LOCATION}}
