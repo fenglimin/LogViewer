@@ -73,6 +73,7 @@ public:
 	CImageList	m_ImageListSmall, m_ImageListNormal;
 	CListCtrl*	m_pLogList;
 	CListCtrl*	m_pModuleList;
+	CListCtrl*	m_pLogFileList;
 	void InitLogList();
 	CLogViewerDlg(CWnd* pParent = NULL);	// standard constructor
 	~CLogViewerDlg();
@@ -86,6 +87,9 @@ public:
 	void SetRawLogContent(int nItem);
 	CWaitDialog* m_pDlgWait;
 	BOOL CheckKeyWord(const CString& strContent);
+	void AddLogFile(const CString& strLogFileName);
+	void InitLogFileList();
+	void ShowAllLogFiles();
 // Dialog Data
 	//{{AFX_DATA(CLogViewerDlg)
 	enum { IDD = IDD_LOGVIEWER_DIALOG };
@@ -169,6 +173,8 @@ public:
 	afx_msg void OnBnClickedCheckPocVita();
 	afx_msg void OnBnClickedCheckScannerState();
 	afx_msg void OnBnClickedCheckPerformance();
+	afx_msg void OnDtnDatetimechangeDatetimepickerStart(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedButtonSelectAllFile();
 };
 
 //{{AFX_INSERT_LOCATION}}

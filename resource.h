@@ -43,6 +43,7 @@
 #define IDC_BUTTON_HIGHLIGHT_NEXT       1027
 #define IDC_BUTTON_HIGHLIGHT_LAST       1028
 #define IDC_BUTTON_CLEAR                1029
+#define IDC_LIST_FILE                   1030
 #define IDC_CHECK_LATEST_CONSOLE_STARTUP 1031
 #define IDC_CHECK_USER_ACTIONS          1032
 #define IDC_CHECK_ACQ_EVENT             1033
@@ -52,6 +53,10 @@
 #define IDC_CHECK_POC_VITA              1037
 #define IDC_CHECK_PERFORMANCE           1038
 #define IDC_CHECK_SCANNER_STATE         1039
+#define IDC_BUTTON_SELECT_ALL_FILE      1040
+#define IDC_BUTTON_SELECT_NONE_FILE     1041
+#define IDC_CHECK_EXCLUDE_FILE          1042
+#define IDC_STATIC_LOG_FILE             1043
 
 // Next default values for new objects
 // 
@@ -59,7 +64,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        139
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1032
+#define _APS_NEXT_CONTROL_VALUE         1044
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

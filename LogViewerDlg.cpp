@@ -171,6 +171,8 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHECK_POC_VITA, &CLogViewerDlg::OnBnClickedCheckPocVita)
 	ON_BN_CLICKED(IDC_CHECK_SCANNER_STATE, &CLogViewerDlg::OnBnClickedCheckScannerState)
 	ON_BN_CLICKED(IDC_CHECK_PERFORMANCE, &CLogViewerDlg::OnBnClickedCheckPerformance)
+	ON_NOTIFY(DTN_DATETIMECHANGE, IDC_DATETIMEPICKER_START, &CLogViewerDlg::OnDtnDatetimechangeDatetimepickerStart)
+	ON_BN_CLICKED(IDC_BUTTON_SELECT_ALL_FILE, &CLogViewerDlg::OnBnClickedButtonSelectAllFile)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -202,7 +204,10 @@ BOOL CLogViewerDlg::OnInitDialog()
 	//  when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
+
+	m_dtNow = COleDateTime::GetCurrentTime();
 	
+	InitLogFileList();
 	InitLogList();
 	InitModuleList();
 	InitFilter();
@@ -211,7 +216,9 @@ BOOL CLogViewerDlg::OnInitDialog()
 
 	OnButtonSelectAll();
 	m_pDlgWait = new CWaitDialog(this);
-	
+
+	ShowAllLogFiles();
+	OnBnClickedButtonSelectAllFile();
 	//AfxBeginThread(LoadCurrentHourThread, this);
 		
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -600,6 +607,19 @@ void CLogViewerDlg::InitModuleList()
 	AddModule("94", "Acq Panel");	
 }
 
+void CLogViewerDlg::InitLogFileList()
+{
+	m_pLogFileList = (CListCtrl*)GetDlgItem(IDC_LIST_FILE);
+	DWORD dwStyle = m_pLogFileList->GetExtendedStyle();
+	dwStyle |= LVS_EX_FULLROWSELECT;
+	dwStyle |= LVS_EX_GRIDLINES;
+	dwStyle |= LVS_EX_CHECKBOXES;
+	m_pLogFileList->SetExtendedStyle(dwStyle);
+
+	m_pLogFileList->InsertColumn(0, " ", LVCFMT_LEFT, 20);
+	m_pLogFileList->InsertColumn(1, "Name", LVCFMT_LEFT, 150);
+}
+
 void CLogViewerDlg::OnCheckToday() 
 {
 	m_bToday = !m_bToday;
@@ -615,7 +635,8 @@ void CLogViewerDlg::OnCheckToday()
 		m_nEndHour = 23;
 		UpdateData(FALSE);
 	}
-	
+
+	ShowAllLogFiles();
 }
 
 void CLogViewerDlg::OnCheckCurrentHour() 
@@ -636,7 +657,7 @@ void CLogViewerDlg::OnCheckCurrentHour()
 		UpdateData(FALSE);
 	}
 
-	
+	ShowAllLogFiles();
 }
 
 void CLogViewerDlg::OnButtonSelectAll() 
@@ -696,6 +717,19 @@ void CLogViewerDlg::AddModule(CString strModuleNumber, CString strModuleName)
 	m_pModuleList->SetItemText(nPos, 2, strModuleName);
 }
 
+void CLogViewerDlg::AddLogFile(const CString& strLogFileName)
+{
+	CString strLogFile = m_strLogHome + "\\" + strLogFileName.Left(10) + "\\" + strLogFileName;
+	ifstream ifs(strLogFile);
+	if (!ifs.good())
+	{
+		return;
+	}
+	
+	int nPos = m_pLogFileList->InsertItem(m_pLogFileList->GetItemCount(), "");
+	m_pLogFileList->SetItemText(nPos, 1, strLogFileName);
+}
+
 BOOL CLogViewerDlg::GetLogDir()
 {
 	char	szConfigFile[128], szExePath[255];
@@ -724,8 +758,7 @@ void CLogViewerDlg::LoadDayLog(CString strDate, BOOL bUpdateSize)
 	if ( m_bCurrentHour )
 	{
 		CString strHour = m_dtNow.Format("%H");
-		CString strLogFile = m_strLogHome + "\\" + strDate + "\\" + strDate + "-" + strHour + ".log";
-		LoadLogFile((LPTSTR)(LPCTSTR)strLogFile, strDate, bUpdateSize);
+		AddLogFile(strDate + "-" + strHour + ".log");
 	}
 	else
 	{
@@ -737,9 +770,7 @@ void CLogViewerDlg::LoadDayLog(CString strDate, BOOL bUpdateSize)
 			else
 				strHour.Format("%d", i );
 
-			
-			CString strLogFile = m_strLogHome + "\\" + strDate + "\\" + strDate + "-" + strHour + ".log";
-			LoadLogFile((LPTSTR)(LPCTSTR)strLogFile, strDate, i == m_nStartHour && bUpdateSize);
+			AddLogFile(strDate + "-" + strHour + ".log");
 		}
 	}
 }
@@ -829,12 +860,10 @@ void CLogViewerDlg::CleanMemory()
 	}
 }
 
-void CLogViewerDlg::OnBnClickedButtonReload()
+void CLogViewerDlg::ShowAllLogFiles()
 {
-	BeforeLoad();
-	CleanMemory();
-	
-	m_vecLogFile.clear();
+	UpdateData();
+	m_pLogFileList->DeleteAllItems();
 	if (m_bToday)
 	{
 		CString strDate = m_dtNow.Format("%Y-%m-%d");
@@ -848,6 +877,19 @@ void CLogViewerDlg::OnBnClickedButtonReload()
 			LoadDayLog(strDate, dtDay == m_tStartDay);
 		}
 	}
+
+	OnBnClickedButtonSelectAllFile();
+	CString strShow;
+	strShow.Format("File(%d)", m_pLogFileList->GetItemCount());
+	SetDlgItemText(IDC_STATIC_LOG_FILE, strShow);
+}
+
+void CLogViewerDlg::OnBnClickedButtonReload()
+{
+	BeforeLoad();
+	CleanMemory();
+	
+	m_vecLogFile.clear();
 
 	AfterLoad();
 }
@@ -1066,7 +1108,7 @@ void CLogViewerDlg::OnBnClickedButtonHighlightLast()
 
 void CLogViewerDlg::OnBnClickedButtonClear()
 {
-	
+	ShowAllLogFiles();
 }
 
 
@@ -1154,4 +1196,23 @@ void CLogViewerDlg::OnBnClickedCheckScannerState()
 void CLogViewerDlg::OnBnClickedCheckPerformance()
 {
 	OnButtonRefresh();
+}
+
+
+void CLogViewerDlg::OnDtnDatetimechangeDatetimepickerStart(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMDATETIMECHANGE pDTChange = reinterpret_cast<LPNMDATETIMECHANGE>(pNMHDR);
+
+	ShowAllLogFiles();
+	*pResult = 0;
+}
+
+
+void CLogViewerDlg::OnBnClickedButtonSelectAllFile()
+{
+	int nCount = m_pLogFileList->GetItemCount();
+	for (int i = 0; i < nCount; i++)
+	{
+		m_pLogFileList->SetCheck(i, TRUE);
+	}
 }
