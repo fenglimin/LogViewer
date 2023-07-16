@@ -104,6 +104,9 @@ public:
 	int		m_nErrorCount;
 	int		m_nWarningCount;
 	CString m_strSearch;
+	CString	m_strLastSelectedRawLog;
+	int		m_nItemForLastSelectedRawLog;
+	BOOL	m_bWorking;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -143,6 +146,8 @@ afx_msg void OnBnClickedButtonHighlightFirst();
 afx_msg void OnBnClickedButtonHighlightPrev();
 afx_msg void OnBnClickedButtonHighlightNext();
 afx_msg void OnBnClickedButtonHighlightLast();
+afx_msg void OnBnClickedButtonClear();
+afx_msg void OnBnClickedButtonLatestConsoleStartup();
 };
 
 //{{AFX_INSERT_LOCATION}}

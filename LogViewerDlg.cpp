@@ -17,6 +17,13 @@ using namespace std;
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static UINT LoadCurrentHourThread(LPVOID pParam)
+{
+	CLogViewerDlg* pParent = static_cast<CLogViewerDlg*>(pParam);
+	pParent->OnBnClickedButtonReload();
+	return 0;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // CAboutDlg dialog used for App About
 
@@ -78,6 +85,8 @@ CLogViewerDlg::CLogViewerDlg(CWnd* pParent /*=NULL*/)
 	m_nEndHour = 0;
 	m_nStartHour = 0;
 	m_bExclude = FALSE;
+	m_nItemForLastSelectedRawLog = -1;
+	m_bWorking = FALSE;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -132,7 +141,9 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_HIGHLIGHT_FIRST, &CLogViewerDlg::OnBnClickedButtonHighlightFirst)
 	ON_BN_CLICKED(IDC_BUTTON_HIGHLIGHT_PREV, &CLogViewerDlg::OnBnClickedButtonHighlightPrev)
 	ON_BN_CLICKED(IDC_BUTTON_HIGHLIGHT_NEXT, &CLogViewerDlg::OnBnClickedButtonHighlightNext)
-	ON_BN_CLICKED(IDC_BUTTON_HIGHLIGHT_FIRSTIDC_BUTTON_HIGHLIGHT_FIRSTIDC_BUTTON_HIGHLIGHT_LAST, &CLogViewerDlg::OnBnClickedButtonHighlightLast)
+	ON_BN_CLICKED(IDC_BUTTON_HIGHLIGHT_LAST, &CLogViewerDlg::OnBnClickedButtonHighlightLast)
+	ON_BN_CLICKED(IDC_BUTTON_CLEAR, &CLogViewerDlg::OnBnClickedButtonClear)
+	ON_BN_CLICKED(IDC_BUTTON_LATEST_CONSOLE_STARTUP, &CLogViewerDlg::OnBnClickedButtonLatestConsoleStartup)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -172,9 +183,9 @@ BOOL CLogViewerDlg::OnInitDialog()
 	GetLogDir();
 
 	OnButtonSelectAll();
-	
-	//OnBnClickedButtonReload();
-	
+
+	//AfxBeginThread(LoadCurrentHourThread, this);
+		
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -359,6 +370,11 @@ void CLogViewerDlg::InsertLog(const LogDetail& logDetail)
 	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strRawLog);
 
 	m_pLogList->SetItemData(nItem, (DWORD_PTR)logDetail.pLogStatus);
+
+	if (logDetail.strRawLog == m_strLastSelectedRawLog)
+	{
+		m_nItemForLastSelectedRawLog = nItem;
+	}
 }
 
 BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateSize)
@@ -790,14 +806,17 @@ void CLogViewerDlg::OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CLogViewerDlg::SetRawLogContent(int nItem)
 {
-	CString strRawLog = nItem != -1? m_pLogList->GetItemText(nItem, 10) : "";
-	SetDlgItemText(IDC_EDIT_RAW_LOG, strRawLog);
-
+	if (!m_bWorking)
+	{
+		m_strLastSelectedRawLog = nItem != -1 ? m_pLogList->GetItemText(nItem, 10) : "";
+		SetDlgItemText(IDC_EDIT_RAW_LOG, m_strLastSelectedRawLog);
+	}	
 }
 
 
 void CLogViewerDlg::BeforeLoad()
 {
+	m_bWorking = TRUE;
 	m_nErrorCount = 0;
 	m_nWarningCount = 0;
 	m_dtNow = COleDateTime::GetCurrentTime();
@@ -827,11 +846,18 @@ void CLogViewerDlg::AfterLoad()
 
 	OnEnChangeEditSearch();
 	
-	COleDateTimeSpan timeSpan = COleDateTime::GetCurrentTime() - m_dtNow;
+	if (m_nItemForLastSelectedRawLog != -1)
+	{
+		m_pLogList->EnsureVisible(m_nItemForLastSelectedRawLog, TRUE);
+		m_pLogList->SetItemState(m_nItemForLastSelectedRawLog, LVIS_SELECTED, LVIS_SELECTED);
+	}
 	
+	COleDateTimeSpan timeSpan = COleDateTime::GetCurrentTime() - m_dtNow;
 	CString strTitle;
 	strTitle.Format("LogViewer - Total %d logs, %d Error logs, %d Warning logs, takes %d seconds.", m_pLogList->GetItemCount(), m_nErrorCount, m_nWarningCount, (int)timeSpan.GetTotalSeconds());
 	SetWindowText(strTitle);
+
+	m_bWorking = FALSE;
 }
 
 void CLogViewerDlg::OnEnChangeEditSearch()
@@ -876,16 +902,16 @@ void CLogViewerDlg::OnReturnPressed(BOOL bCtrlPressed, BOOL bShiftPressed)
 	
 	if ( pFocusCtrl == GetDlgItem(IDC_EDIT_SEARCH))
 	{
-		if (bCtrlPressed)
+		if (bShiftPressed)
 		{
-			if (bShiftPressed)
+			if (bCtrlPressed)
 				OnBnClickedButtonHighlightFirst();
 			else
 				OnBnClickedButtonHighlightPrev();
 		}
 		else
 		{
-			if (bShiftPressed)
+			if (bCtrlPressed)
 				OnBnClickedButtonHighlightLast();
 			else
 				OnBnClickedButtonHighlightNext();
@@ -946,4 +972,16 @@ void CLogViewerDlg::OnBnClickedButtonHighlightNext()
 void CLogViewerDlg::OnBnClickedButtonHighlightLast()
 {
 	ChangeHighlightedItem(m_vecHitedLine.size() - 1);
+}
+
+
+void CLogViewerDlg::OnBnClickedButtonClear()
+{
+	
+}
+
+
+void CLogViewerDlg::OnBnClickedButtonLatestConsoleStartup()
+{
+	
 }
