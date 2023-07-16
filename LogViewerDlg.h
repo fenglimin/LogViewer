@@ -77,14 +77,15 @@ public:
 	CLogViewerDlg(CWnd* pParent = NULL);	// standard constructor
 	~CLogViewerDlg();
 
+	std::vector<CString> m_vecFilterKeyword;
 	std::vector<LogFile> m_vecLogFile;
 	std::vector<int> m_vecHitedLine;
 	int		m_nCurrentHighlightedItemIndex;
 	
 	BOOL FilterLog(const LogDetail& logDetail);
 	void SetRawLogContent(int nItem);
-	CWaitDialog m_dlgWait;
-
+	CWaitDialog* m_pDlgWait;
+	BOOL CheckKeyWord(const CString& strContent);
 // Dialog Data
 	//{{AFX_DATA(CLogViewerDlg)
 	enum { IDD = IDD_LOGVIEWER_DIALOG };
@@ -108,7 +109,15 @@ public:
 	CString	m_strLastSelectedRawLog;
 	int		m_nItemForLastSelectedRawLog;
 	BOOL	m_bWorking;
-	BOOL	m_bLatestConsoleStartup;
+	BOOL	m_bLatestConsoleStartupOnly;
+	BOOL	m_bUserActions;
+	BOOL	m_bAcqEvents;
+	BOOL	m_bDipCom;
+	BOOL	m_bDipLog;
+	BOOL	m_bDipBeamSenseCom;
+	BOOL	m_bPocVita;
+	BOOL	m_bScannerState;
+	BOOL	m_bPerformance;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -151,6 +160,15 @@ public:
 	afx_msg void OnBnClickedButtonHighlightLast();
 	afx_msg void OnBnClickedButtonClear();
 	afx_msg void OnBnClickedCheckLatestConsoleStartup();
+	afx_msg void OnBnClickedCheckUserActions();
+//	afx_msg void OnBnClickedCheckUserActions2();
+	afx_msg void OnBnClickedCheckAcqEvent();
+	afx_msg void OnBnClickedCheckDipCom();
+	afx_msg void OnBnClickedCheckDipLog();
+	afx_msg void OnBnClickedCheckDipBeamSenseCom();
+	afx_msg void OnBnClickedCheckPocVita();
+	afx_msg void OnBnClickedCheckScannerState();
+	afx_msg void OnBnClickedCheckPerformance();
 };
 
 //{{AFX_INSERT_LOCATION}}

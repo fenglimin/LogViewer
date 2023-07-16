@@ -87,7 +87,15 @@ CLogViewerDlg::CLogViewerDlg(CWnd* pParent /*=NULL*/)
 	m_bExclude = FALSE;
 	m_nItemForLastSelectedRawLog = -1;
 	m_bWorking = FALSE;
-	m_bLatestConsoleStartup = FALSE;
+	m_bLatestConsoleStartupOnly = FALSE;
+	m_bUserActions = FALSE;
+	m_bAcqEvents = FALSE;
+	m_bDipCom = FALSE;
+	m_bDipLog = FALSE;
+	m_bDipBeamSenseCom = FALSE;
+	m_bPocVita = FALSE;
+	m_bScannerState = FALSE;
+	m_bPerformance = FALSE;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -95,6 +103,7 @@ CLogViewerDlg::CLogViewerDlg(CWnd* pParent /*=NULL*/)
 
 CLogViewerDlg::~CLogViewerDlg()
 {
+	delete m_pDlgWait;
 	CleanMemory();
 }
 
@@ -114,7 +123,15 @@ void CLogViewerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_SEARCH, m_strSearch);
 	DDX_Check(pDX, IDC_CHECK_CURRENT_HOUR, m_bCurrentHour);
 	DDX_Check(pDX, IDC_CHECK_TODAY, m_bToday);
-	DDX_Check(pDX, IDC_CHECK_LATEST_CONSOLE_STARTUP, m_bLatestConsoleStartup);
+	DDX_Check(pDX, IDC_CHECK_LATEST_CONSOLE_STARTUP, m_bLatestConsoleStartupOnly);
+	DDX_Check(pDX, IDC_CHECK_USER_ACTIONS, m_bUserActions);
+	DDX_Check(pDX, IDC_CHECK_ACQ_EVENT, m_bAcqEvents);
+	DDX_Check(pDX, IDC_CHECK_DIP_COM, m_bDipCom);
+	DDX_Check(pDX, IDC_CHECK_DIP_LOG, m_bDipLog);
+	DDX_Check(pDX, IDC_CHECK_DIP_BEAM_SENSE_COM, m_bDipBeamSenseCom);
+	DDX_Check(pDX, IDC_CHECK_POC_VITA, m_bPocVita);
+	DDX_Check(pDX, IDC_CHECK_SCANNER_STATE, m_bScannerState);
+	DDX_Check(pDX, IDC_CHECK_PERFORMANCE, m_bPerformance);
 	DDX_Text(pDX, IDC_EDIT_END_HOUR, m_nEndHour);
 	DDV_MinMaxInt(pDX, m_nEndHour, 0, 23);
 	DDX_Text(pDX, IDC_EDIT_START_HOUR, m_nStartHour);
@@ -145,8 +162,15 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_HIGHLIGHT_NEXT, &CLogViewerDlg::OnBnClickedButtonHighlightNext)
 	ON_BN_CLICKED(IDC_BUTTON_HIGHLIGHT_LAST, &CLogViewerDlg::OnBnClickedButtonHighlightLast)
 	ON_BN_CLICKED(IDC_BUTTON_CLEAR, &CLogViewerDlg::OnBnClickedButtonClear)
-	ON_BN_CLICKED(IDC_BUTTON_LATEST_CONSOLE_STARTUP, &CLogViewerDlg::FilterLatestConsoleStartup)
 	ON_BN_CLICKED(IDC_CHECK_LATEST_CONSOLE_STARTUP, &CLogViewerDlg::OnBnClickedCheckLatestConsoleStartup)
+	ON_BN_CLICKED(IDC_CHECK_USER_ACTIONS, &CLogViewerDlg::OnBnClickedCheckUserActions)
+	ON_BN_CLICKED(IDC_CHECK_ACQ_EVENT, &CLogViewerDlg::OnBnClickedCheckAcqEvent)
+	ON_BN_CLICKED(IDC_CHECK_DIP_COM, &CLogViewerDlg::OnBnClickedCheckDipCom)
+	ON_BN_CLICKED(IDC_CHECK_DIP_LOG, &CLogViewerDlg::OnBnClickedCheckDipLog)
+	ON_BN_CLICKED(IDC_CHECK_DIP_BEAM_SENSE_COM, &CLogViewerDlg::OnBnClickedCheckDipBeamSenseCom)
+	ON_BN_CLICKED(IDC_CHECK_POC_VITA, &CLogViewerDlg::OnBnClickedCheckPocVita)
+	ON_BN_CLICKED(IDC_CHECK_SCANNER_STATE, &CLogViewerDlg::OnBnClickedCheckScannerState)
+	ON_BN_CLICKED(IDC_CHECK_PERFORMANCE, &CLogViewerDlg::OnBnClickedCheckPerformance)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -186,7 +210,8 @@ BOOL CLogViewerDlg::OnInitDialog()
 	GetLogDir();
 
 	OnButtonSelectAll();
-
+	m_pDlgWait = new CWaitDialog(this);
+	
 	//AfxBeginThread(LoadCurrentHourThread, this);
 		
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -400,7 +425,7 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 	
 	CString strShow = "Loading log file ";
 	strShow += strLogFile;
-	m_dlgWait.UpdateText( strShow, bUpdateSize);
+	m_pDlgWait->UpdateText( strShow, bUpdateSize);
 	
 	LogFile logFile;
 
@@ -521,7 +546,24 @@ BOOL CLogViewerDlg::FilterLog(const LogDetail& logDetail)
 			return FALSE;
 	}
 
-	return TRUE;
+	return CheckKeyWord(logDetail.strLogContent);
+}
+
+BOOL CLogViewerDlg::CheckKeyWord(const CString& strContent)
+{
+	if (m_vecFilterKeyword.size() == 0)
+		return TRUE;
+	
+	CString strTemp = strContent;
+	strTemp.MakeUpper();
+	for(int i = 0; i < m_vecFilterKeyword.size(); i++)
+	{
+		if (strTemp.Find(m_vecFilterKeyword[i]) != -1)
+			return TRUE;
+
+	}
+	
+	return FALSE;
 }
 
 void CLogViewerDlg::InitModuleList()
@@ -755,7 +797,7 @@ void CLogViewerDlg::OnButtonRefresh()
 {
 	BeforeLoad();
 
-	if (m_bLatestConsoleStartup)
+	if (m_bLatestConsoleStartupOnly)
 	{
 		FilterLatestConsoleStartup();
 	}
@@ -764,7 +806,7 @@ void CLogViewerDlg::OnButtonRefresh()
 		for (int i = 0; i < m_vecLogFile.size(); i++)
 		{
 			CString strShow = "Filtering log file " + m_vecLogFile[i].strLogFileName;
-			m_dlgWait.UpdateText(strShow, i == 0);
+			m_pDlgWait->UpdateText(strShow, i == 0);
 
 			for (int j = 0; j < m_vecLogFile[i].vecLog.size(); j++)
 			{
@@ -842,7 +884,7 @@ void CLogViewerDlg::BeforeLoad()
 	m_nErrorCount = 0;
 	m_nWarningCount = 0;
 	m_dtNow = COleDateTime::GetCurrentTime();
-	m_dlgWait.Show();
+	m_pDlgWait->Show();
 	UpdateData();
 
 	m_strLogContains.MakeUpper();
@@ -857,13 +899,31 @@ void CLogViewerDlg::BeforeLoad()
 	}
 
 	m_nSeverity = 4 - m_comboLogSeverity.GetCurSel();
-	m_pLogList->DeleteAllItems();	
+	m_pLogList->DeleteAllItems();
+
+	m_vecFilterKeyword.clear();
+	if (m_bUserActions)
+		m_vecFilterKeyword.push_back("[USERACTION]");
+	if (m_bAcqEvents)
+		m_vecFilterKeyword.push_back("[ACQ EVENT]");
+	if (m_bDipCom)
+		m_vecFilterKeyword.push_back("[DIP COM]");
+	if (m_bDipLog)
+		m_vecFilterKeyword.push_back("[DIP LOG]");
+	if (m_bDipBeamSenseCom)
+		m_vecFilterKeyword.push_back("[DIP  BEAM SENSE COM]");
+	if (m_bPocVita)
+		m_vecFilterKeyword.push_back("[POC VITA]");
+	if (m_bScannerState)
+		m_vecFilterKeyword.push_back("[SCANNER STATE]");
+	if (m_bPerformance)
+		m_vecFilterKeyword.push_back("PERFORMANCE");
 }
 
 
 void CLogViewerDlg::AfterLoad()
 {
-	m_dlgWait.Close();
+	m_pDlgWait->Close();
 	m_pLogList->SetRedraw(TRUE);//UnlockWindowUpdate();
 
 	OnEnChangeEditSearch();
@@ -1026,7 +1086,7 @@ void CLogViewerDlg::FilterLatestConsoleStartup()
 	for (int i = nStartFileIndex; i < m_vecLogFile.size(); i++)
 	{
 		CString strShow = "Filtering log file " + m_vecLogFile[i].strLogFileName;
-		m_dlgWait.UpdateText(strShow, i == 0);
+		m_pDlgWait->UpdateText(strShow, i == 0);
 
 		int j = i == nStartFileIndex ? nStartLineIndex : 0;
 		for (; j < m_vecLogFile[i].vecLog.size(); j++)
@@ -1037,6 +1097,54 @@ void CLogViewerDlg::FilterLatestConsoleStartup()
 }
 
 void CLogViewerDlg::OnBnClickedCheckLatestConsoleStartup()
+{
+	OnButtonRefresh();
+}
+
+
+void CLogViewerDlg::OnBnClickedCheckUserActions()
+{
+	OnButtonRefresh();
+}
+
+
+void CLogViewerDlg::OnBnClickedCheckAcqEvent()
+{
+	OnButtonRefresh();
+}
+
+
+void CLogViewerDlg::OnBnClickedCheckDipCom()
+{
+	OnButtonRefresh();
+}
+
+
+void CLogViewerDlg::OnBnClickedCheckDipLog()
+{
+	OnButtonRefresh();
+}
+
+
+void CLogViewerDlg::OnBnClickedCheckDipBeamSenseCom()
+{
+	OnButtonRefresh();
+}
+
+
+void CLogViewerDlg::OnBnClickedCheckPocVita()
+{
+	OnButtonRefresh();
+}
+
+
+void CLogViewerDlg::OnBnClickedCheckScannerState()
+{
+	OnButtonRefresh();
+}
+
+
+void CLogViewerDlg::OnBnClickedCheckPerformance()
 {
 	OnButtonRefresh();
 }

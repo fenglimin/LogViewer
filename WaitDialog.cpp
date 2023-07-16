@@ -47,7 +47,7 @@ END_MESSAGE_MAP()
 
 void CWaitDialog::Show()
 {
-	CenterWindow();
+	CenterWindow(GetParent());
 	ShowWindow ( SW_SHOW );
 	UpdateWindow ();
 }
@@ -70,4 +70,3 @@ void CWaitDialog::Close()
 {
 	ShowWindow(SW_HIDE);
 }
-

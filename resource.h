@@ -44,8 +44,14 @@
 #define IDC_BUTTON_HIGHLIGHT_LAST       1028
 #define IDC_BUTTON_CLEAR                1029
 #define IDC_CHECK_LATEST_CONSOLE_STARTUP 1031
-#define IDC_CHECK_LATEST_CONSOLE_STARTUP2 1032
 #define IDC_CHECK_USER_ACTIONS          1032
+#define IDC_CHECK_ACQ_EVENT             1033
+#define IDC_CHECK_DIP_COM               1034
+#define IDC_CHECK_DIP_LOG               1035
+#define IDC_CHECK_DIP_BEAM_SENSE_COM    1036
+#define IDC_CHECK_POC_VITA              1037
+#define IDC_CHECK_PERFORMANCE           1038
+#define IDC_CHECK_SCANNER_STATE         1039
 
 // Next default values for new objects
 // 
