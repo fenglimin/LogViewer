@@ -18,6 +18,7 @@ struct LogStatus
 	BOOL bFiltered;		// This log will be shown in Log list
 	BOOL bQueried;		// This log will be queried in the log list(Change background color)
 	BOOL bHighlighted;	// This log will be highlighted in the log list(Change background color and font color)
+	BOOL bSelected;
 };
 
 struct LogDetail
@@ -141,13 +142,13 @@ public:
 	void OnReturnPressed(BOOL bCtrlPressed, BOOL bShiftPressed);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	void ChangeHighlightedItem(int nNewItem);
-void OnEnChangeEditSearch();
-afx_msg void OnBnClickedButtonHighlightFirst();
-afx_msg void OnBnClickedButtonHighlightPrev();
-afx_msg void OnBnClickedButtonHighlightNext();
-afx_msg void OnBnClickedButtonHighlightLast();
-afx_msg void OnBnClickedButtonClear();
-afx_msg void OnBnClickedButtonLatestConsoleStartup();
+	void OnEnChangeEditSearch();
+	afx_msg void OnBnClickedButtonHighlightFirst();
+	afx_msg void OnBnClickedButtonHighlightPrev();
+	afx_msg void OnBnClickedButtonHighlightNext();
+	afx_msg void OnBnClickedButtonHighlightLast();
+	afx_msg void OnBnClickedButtonClear();
+	afx_msg void OnBnClickedButtonLatestConsoleStartup();
 };
 
 //{{AFX_INSERT_LOCATION}}

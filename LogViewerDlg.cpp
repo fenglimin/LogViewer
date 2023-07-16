@@ -300,7 +300,12 @@ void CLogViewerDlg::OnCustomDrawListCtrl(NMHDR* pNMHDR, LRESULT* pResult)
 			else
 			{
 				pLVCD->clrTextBk = RGB(255, 255, 255);
-			}	
+			}
+
+			if (pLogStatus->bSelected)
+			{
+				pLVCD->clrTextBk = RGB(0, 0, 255);
+			}
 		}		
 
 		*pResult = CDRF_NEWFONT;
@@ -466,6 +471,7 @@ void CLogViewerDlg::ProcessLog(const LogDetail& logDetail)
 	logDetail.pLogStatus->bFiltered = FilterLog(logDetail);
 	logDetail.pLogStatus->bQueried = FALSE;
 	logDetail.pLogStatus->bHighlighted = FALSE;
+	logDetail.pLogStatus->bSelected = FALSE;
 
 	if (logDetail.pLogStatus->bFiltered)
 	{
@@ -798,8 +804,14 @@ void CLogViewerDlg::OnBnClickedButtonReload()
 void CLogViewerDlg::OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	
+	LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(pNMLV->iItem);
+	pLogStatus->bSelected = pNMLV->uNewState & LVIS_SELECTED == LVIS_SELECTED;
 
-	SetRawLogContent(pNMLV->iItem);
+	if (pNMLV->uNewState & LVIS_FOCUSED)
+	{
+		SetRawLogContent(pNMLV->iItem);
+	}
 	
 	*pResult = 0;
 }
@@ -846,18 +858,19 @@ void CLogViewerDlg::AfterLoad()
 
 	OnEnChangeEditSearch();
 	
-	if (m_nItemForLastSelectedRawLog != -1)
-	{
-		m_pLogList->EnsureVisible(m_nItemForLastSelectedRawLog, TRUE);
-		m_pLogList->SetItemState(m_nItemForLastSelectedRawLog, LVIS_SELECTED, LVIS_SELECTED);
-	}
-	
 	COleDateTimeSpan timeSpan = COleDateTime::GetCurrentTime() - m_dtNow;
 	CString strTitle;
 	strTitle.Format("LogViewer - Total %d logs, %d Error logs, %d Warning logs, takes %d seconds.", m_pLogList->GetItemCount(), m_nErrorCount, m_nWarningCount, (int)timeSpan.GetTotalSeconds());
 	SetWindowText(strTitle);
 
 	m_bWorking = FALSE;
+	if (m_nItemForLastSelectedRawLog != -1)
+	{
+		m_pLogList->EnsureVisible(m_nItemForLastSelectedRawLog, TRUE);
+		m_pLogList->SetItemState(m_nItemForLastSelectedRawLog, LVIS_SELECTED, LVIS_SELECTED);
+	}
+
+	m_pLogList->SetFocus();
 }
 
 void CLogViewerDlg::OnEnChangeEditSearch()
@@ -900,7 +913,7 @@ void CLogViewerDlg::OnReturnPressed(BOOL bCtrlPressed, BOOL bShiftPressed)
 {
 	CWnd* pFocusCtrl = GetFocus();
 	
-	if ( pFocusCtrl == GetDlgItem(IDC_EDIT_SEARCH))
+	if ( pFocusCtrl == GetDlgItem(IDC_EDIT_SEARCH) || pFocusCtrl == m_pLogList )
 	{
 		if (bShiftPressed)
 		{
@@ -928,7 +941,6 @@ void CLogViewerDlg::ChangeHighlightedItem(int nNewItemIndex)
 	
 	if (nNewItemIndex < 0 || nNewItemIndex >= m_vecHitedLine.size())
 	{
-		SetRawLogContent(-1);
 		return;
 	}
 
