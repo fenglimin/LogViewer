@@ -122,6 +122,8 @@ public:
 	BOOL	m_bPocVita;
 	BOOL	m_bScannerState;
 	BOOL	m_bPerformance;
+
+	BOOL	m_bStarting;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -175,6 +177,13 @@ public:
 	afx_msg void OnBnClickedCheckPerformance();
 	afx_msg void OnDtnDatetimechangeDatetimepickerStart(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedButtonSelectAllFile();
+	afx_msg void OnDtnDatetimechangeDatetimepickerEnd(NMHDR *pNMHDR, LRESULT *pResult);
+//	afx_msg void OnEnChangeEditStartHour();
+//	afx_msg void OnEnChangeEditEndHour();
+//	afx_msg void OnDeltaposSpinStartHour(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnEnChangeEditStartHour();
+	afx_msg void OnEnChangeEditEndHour();
+	afx_msg void OnBnClickedButtonSelectNoneFile();
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -96,6 +96,7 @@ CLogViewerDlg::CLogViewerDlg(CWnd* pParent /*=NULL*/)
 	m_bPocVita = FALSE;
 	m_bScannerState = FALSE;
 	m_bPerformance = FALSE;
+	m_bStarting = TRUE;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -173,6 +174,10 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHECK_PERFORMANCE, &CLogViewerDlg::OnBnClickedCheckPerformance)
 	ON_NOTIFY(DTN_DATETIMECHANGE, IDC_DATETIMEPICKER_START, &CLogViewerDlg::OnDtnDatetimechangeDatetimepickerStart)
 	ON_BN_CLICKED(IDC_BUTTON_SELECT_ALL_FILE, &CLogViewerDlg::OnBnClickedButtonSelectAllFile)
+	ON_NOTIFY(DTN_DATETIMECHANGE, IDC_DATETIMEPICKER_END, &CLogViewerDlg::OnDtnDatetimechangeDatetimepickerEnd)
+	ON_EN_CHANGE(IDC_EDIT_START_HOUR, &CLogViewerDlg::OnEnChangeEditStartHour)
+	ON_EN_CHANGE(IDC_EDIT_END_HOUR, &CLogViewerDlg::OnEnChangeEditEndHour)
+	ON_BN_CLICKED(IDC_BUTTON_SELECT_NONE_FILE, &CLogViewerDlg::OnBnClickedButtonSelectNoneFile)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -220,7 +225,8 @@ BOOL CLogViewerDlg::OnInitDialog()
 	ShowAllLogFiles();
 	OnBnClickedButtonSelectAllFile();
 	//AfxBeginThread(LoadCurrentHourThread, this);
-		
+
+	m_bStarting = FALSE;
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -1202,7 +1208,6 @@ void CLogViewerDlg::OnBnClickedCheckPerformance()
 void CLogViewerDlg::OnDtnDatetimechangeDatetimepickerStart(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMDATETIMECHANGE pDTChange = reinterpret_cast<LPNMDATETIMECHANGE>(pNMHDR);
-
 	ShowAllLogFiles();
 	*pResult = 0;
 }
@@ -1214,5 +1219,40 @@ void CLogViewerDlg::OnBnClickedButtonSelectAllFile()
 	for (int i = 0; i < nCount; i++)
 	{
 		m_pLogFileList->SetCheck(i, TRUE);
+	}
+}
+
+
+void CLogViewerDlg::OnDtnDatetimechangeDatetimepickerEnd(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMDATETIMECHANGE pDTChange = reinterpret_cast<LPNMDATETIMECHANGE>(pNMHDR);
+	ShowAllLogFiles();
+	*pResult = 0;
+}
+
+void CLogViewerDlg::OnEnChangeEditStartHour()
+{
+	if (!m_bStarting)
+	{
+		ShowAllLogFiles();
+	}
+}
+
+
+void CLogViewerDlg::OnEnChangeEditEndHour()
+{
+	if (!m_bStarting)
+	{
+		ShowAllLogFiles();
+	}
+}
+
+
+void CLogViewerDlg::OnBnClickedButtonSelectNoneFile()
+{
+	int nCount = m_pLogFileList->GetItemCount();
+	for (int i = 0; i < nCount; i++)
+	{
+		m_pLogFileList->SetCheck(i, FALSE);
 	}
 }
