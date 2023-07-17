@@ -499,7 +499,8 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 		logDetail.pLogStatus = new LogStatus();
 		logFile.vecLog.push_back(logDetail);
 
-		ProcessLog(logDetail);
+		if (!m_bLatestConsoleStartupOnly)
+			ProcessLog(logDetail);
 	}
 
 	ifs.close();
@@ -732,6 +733,12 @@ void CLogViewerDlg::AddLogFile(const CString& strLogFileName)
 	{
 		return;
 	}
+
+	ifs.seekg(0, std::ios::end);
+	std::streampos fileSize = ifs.tellg();
+	ifs.close();
+
+	int i = (int)fileSize;
 	
 	int nPos = m_pLogFileList->InsertItem(m_pLogFileList->GetItemCount(), "");
 	m_pLogFileList->SetItemText(nPos, 1, strLogFileName);
@@ -925,6 +932,11 @@ void CLogViewerDlg::OnBnClickedButtonReload()
 		bUpdateSize = FALSE;
 	}
 
+	if (m_bLatestConsoleStartupOnly)
+	{
+		FilterLatestConsoleStartup();
+	}
+	
 	AfterLoad();
 }
 
@@ -1150,7 +1162,14 @@ void CLogViewerDlg::OnBnClickedButtonHighlightLast()
 
 void CLogViewerDlg::OnBnClickedButtonClear()
 {
-	ShowAllLogFiles();
+	m_comboLogSeverity.SetCurSel(4);
+	OnButtonSelectAll();
+	m_strErrorCode = "";
+	m_strLogContains = "";
+	m_strProcessId = "";
+	m_strThreadId = "";
+	m_bLatestConsoleStartupOnly = FALSE;
+	UpdateData(FALSE);
 }
 
 
