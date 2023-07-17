@@ -177,8 +177,8 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_EN_CHANGE(IDC_EDIT_START_HOUR, &CLogViewerDlg::OnEnChangeEditStartHour)
 	ON_EN_CHANGE(IDC_EDIT_END_HOUR, &CLogViewerDlg::OnEnChangeEditEndHour)
 	ON_BN_CLICKED(IDC_BUTTON_SELECT_NONE_FILE, &CLogViewerDlg::OnBnClickedButtonSelectNoneFile)
-//	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_MODULE_LIST, &CLogViewerDlg::OnLvnItemchangedListModuleList)
-ON_NOTIFY(NM_CLICK, IDC_LIST_FILE, &CLogViewerDlg::OnNMClickListFile)
+	ON_NOTIFY(NM_CLICK, IDC_LIST_FILE, &CLogViewerDlg::OnNMClickListFile)
+	ON_NOTIFY(NM_DBLCLK, IDC_LIST_LOG, &CLogViewerDlg::OnNMDblclkListLog)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -944,6 +944,9 @@ void CLogViewerDlg::OnBnClickedButtonReload()
 void CLogViewerDlg::OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	*pResult = 0;
+	if (m_bWorking)
+		return;
 	
 	LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(pNMLV->iItem);
 	pLogStatus->bSelected = pNMLV->uNewState & LVIS_SELECTED == LVIS_SELECTED;
@@ -951,9 +954,7 @@ void CLogViewerDlg::OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult)
 	if (pNMLV->uNewState & LVIS_FOCUSED)
 	{
 		SetRawLogContent(pNMLV->iItem);
-	}
-	
-	*pResult = 0;
+	}	
 }
 
 void CLogViewerDlg::SetRawLogContent(int nItem)
@@ -1336,5 +1337,19 @@ void CLogViewerDlg::OnNMClickListFile(NMHDR *pNMHDR, LRESULT *pResult)
 	}
 
 	ShowLogFileCount();
+	*pResult = 0;
+}
+
+void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+
+	if (pNMItemActivate->iSubItem == 3)
+		SetDlgItemText(IDC_EDIT_PROCESS_ID, m_pLogList->GetItemText(pNMItemActivate->iItem, pNMItemActivate->iSubItem));
+	else if (pNMItemActivate->iSubItem == 4)
+		SetDlgItemText(IDC_EDIT_THREAD_ID, m_pLogList->GetItemText(pNMItemActivate->iItem, pNMItemActivate->iSubItem));
+	else if (pNMItemActivate->iSubItem == 6)
+		SetDlgItemText(IDC_EDIT_ERROR_CODE, m_pLogList->GetItemText(pNMItemActivate->iItem, pNMItemActivate->iSubItem));
+	
 	*pResult = 0;
 }

@@ -170,7 +170,6 @@ public:
 	afx_msg void OnBnClickedButtonClear();
 	afx_msg void OnBnClickedCheckLatestConsoleStartup();
 	afx_msg void OnBnClickedCheckUserActions();
-//	afx_msg void OnBnClickedCheckUserActions2();
 	afx_msg void OnBnClickedCheckAcqEvent();
 	afx_msg void OnBnClickedCheckDipCom();
 	afx_msg void OnBnClickedCheckDipLog();
@@ -181,14 +180,11 @@ public:
 	afx_msg void OnDtnDatetimechangeDatetimepickerStart(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedButtonSelectAllFile();
 	afx_msg void OnDtnDatetimechangeDatetimepickerEnd(NMHDR *pNMHDR, LRESULT *pResult);
-//	afx_msg void OnEnChangeEditStartHour();
-//	afx_msg void OnEnChangeEditEndHour();
-//	afx_msg void OnDeltaposSpinStartHour(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnEnChangeEditStartHour();
 	afx_msg void OnEnChangeEditEndHour();
 	afx_msg void OnBnClickedButtonSelectNoneFile();
-//	afx_msg void OnLvnItemchangedListModuleList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMClickListFile(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult);
 };
 
 //{{AFX_INSERT_LOCATION}}
