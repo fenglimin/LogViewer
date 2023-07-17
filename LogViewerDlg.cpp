@@ -137,7 +137,6 @@ void CLogViewerDlg::DoDataExchange(CDataExchange* pDX)
 	DDV_MinMaxInt(pDX, m_nEndHour, 0, 23);
 	DDX_Text(pDX, IDC_EDIT_START_HOUR, m_nStartHour);
 	DDV_MinMaxInt(pDX, m_nStartHour, 0, 23);
-	DDX_Check(pDX, IDC_CHECK_EXCLUDE, m_bExclude);
 	//}}AFX_DATA_MAP
 }
 
@@ -178,6 +177,8 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_EN_CHANGE(IDC_EDIT_START_HOUR, &CLogViewerDlg::OnEnChangeEditStartHour)
 	ON_EN_CHANGE(IDC_EDIT_END_HOUR, &CLogViewerDlg::OnEnChangeEditEndHour)
 	ON_BN_CLICKED(IDC_BUTTON_SELECT_NONE_FILE, &CLogViewerDlg::OnBnClickedButtonSelectNoneFile)
+//	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_MODULE_LIST, &CLogViewerDlg::OnLvnItemchangedListModuleList)
+ON_NOTIFY(NM_CLICK, IDC_LIST_FILE, &CLogViewerDlg::OnNMClickListFile)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -431,7 +432,7 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 	ifstream ifs(strLogFile);
 	if ( !ifs.good())
 	{
-//		AfxMessageBox("Error reading log file " + CString(strLogFile));
+		AfxMessageBox("Error reading log file " + CString(strLogFile));
 		return FALSE;
 	}
 
@@ -885,10 +886,23 @@ void CLogViewerDlg::ShowAllLogFiles()
 	}
 
 	OnBnClickedButtonSelectAllFile();
+	ShowLogFileCount();
+}
+
+void CLogViewerDlg::ShowLogFileCount()
+{
 	CString strShow;
-	strShow.Format("File(%d)", m_pLogFileList->GetItemCount());
+	m_nLogFileCount = 0;
+	for (int i = 0; i < m_pLogFileList->GetItemCount(); i++)
+	{
+		if (m_pLogFileList->GetCheck(i))
+			m_nLogFileCount++;
+	}
+
+	strShow.Format("File(%d)", m_nLogFileCount);
 	SetDlgItemText(IDC_STATIC_LOG_FILE, strShow);
 }
+
 
 void CLogViewerDlg::OnBnClickedButtonReload()
 {
@@ -896,6 +910,20 @@ void CLogViewerDlg::OnBnClickedButtonReload()
 	CleanMemory();
 	
 	m_vecLogFile.clear();
+
+	BOOL bUpdateSize = TRUE;
+	int nCount = m_pLogFileList->GetItemCount();
+	for (int i = 0; i < nCount; i++)
+	{
+		if (!m_pLogFileList->GetCheck(i))
+			continue;
+
+		CString strFileName = m_pLogFileList->GetItemText(i, 1);
+		CString strDate = strFileName.Left(10);
+		CString strFilePath = m_strLogHome + "\\" + strDate + "\\" + strFileName;
+		LoadLogFile((LPTSTR)(LPCTSTR)strFilePath, strDate, bUpdateSize);
+		bUpdateSize = FALSE;
+	}
 
 	AfterLoad();
 }
@@ -928,6 +956,19 @@ void CLogViewerDlg::SetRawLogContent(int nItem)
 
 void CLogViewerDlg::BeforeLoad()
 {
+	if (GetSelectedModules() == 0)
+	{
+		AfxMessageBox("Please select at least one Module!");
+		return;
+	}
+
+	if (m_nLogFileCount == 0)
+	{
+		AfxMessageBox("Please select at least one log file!");
+		return;
+	}
+
+	
 	m_bWorking = TRUE;
 	m_nErrorCount = 0;
 	m_nWarningCount = 0;
@@ -940,11 +981,6 @@ void CLogViewerDlg::BeforeLoad()
 	m_pLogList->SetRedraw(FALSE);// LockWindowUpdate();
 
 
-	if (GetSelectedModules() == 0 && !m_bExclude)
-	{
-		AfxMessageBox("Please select at least one Module!");
-		return;
-	}
 
 	m_nSeverity = 4 - m_comboLogSeverity.GetCurSel();
 	m_pLogList->DeleteAllItems();
@@ -1220,6 +1256,8 @@ void CLogViewerDlg::OnBnClickedButtonSelectAllFile()
 	{
 		m_pLogFileList->SetCheck(i, TRUE);
 	}
+
+	ShowLogFileCount();
 }
 
 
@@ -1255,4 +1293,29 @@ void CLogViewerDlg::OnBnClickedButtonSelectNoneFile()
 	{
 		m_pLogFileList->SetCheck(i, FALSE);
 	}
+
+	ShowLogFileCount();
+}
+
+void CLogViewerDlg::OnNMClickListFile(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+
+	if (pNMLV->iItem >= 0 && pNMLV->iSubItem > 0)
+	{
+		UINT state = m_pLogFileList->GetItemState(pNMLV->iItem, LVIS_STATEIMAGEMASK);
+
+		// Toggle checkbox state
+		if (state == INDEXTOSTATEIMAGEMASK(1)) // Unchecked
+		{
+			m_pLogFileList->SetCheck(pNMLV->iItem, TRUE);
+		}
+		else if (state == INDEXTOSTATEIMAGEMASK(2)) // Checked
+		{
+			m_pLogFileList->SetCheck(pNMLV->iItem, FALSE);
+		}
+	}
+
+	ShowLogFileCount();
+	*pResult = 0;
 }

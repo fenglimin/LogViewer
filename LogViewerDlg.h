@@ -124,6 +124,9 @@ public:
 	BOOL	m_bPerformance;
 
 	BOOL	m_bStarting;
+	int		m_nLogFileCount;
+
+	void	ShowLogFileCount();
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -184,6 +187,8 @@ public:
 	afx_msg void OnEnChangeEditStartHour();
 	afx_msg void OnEnChangeEditEndHour();
 	afx_msg void OnBnClickedButtonSelectNoneFile();
+//	afx_msg void OnLvnItemchangedListModuleList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMClickListFile(NMHDR *pNMHDR, LRESULT *pResult);
 };
 
 //{{AFX_INSERT_LOCATION}}
