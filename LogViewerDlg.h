@@ -81,7 +81,12 @@ public:
 	std::vector<CString> m_vecFilterKeyword;
 	std::vector<LogFile> m_vecLogFile;
 	std::vector<int> m_vecHitedLine;
+	std::vector<int> m_vecErrorLog;
+	std::vector<int> m_vecWarningLog;
 	int		m_nCurrentHighlightedItemIndex;
+	int		m_nCurrentErrorItemIndex;
+	int		m_nCurrentWarningItemIndex;
+	int FindLastVisibleItem(const std::vector<int>& vecData);
 	
 	BOOL FilterLog(const LogDetail& logDetail);
 	void SetRawLogContent(int nItem);
@@ -107,8 +112,6 @@ public:
 	int		m_nEndHour;
 	int		m_nStartHour;
 	BOOL	m_bExclude;
-	int		m_nErrorCount;
-	int		m_nWarningCount;
 	CString m_strSearch;
 	CString	m_strLastSelectedRawLog;
 	int		m_nItemForLastSelectedRawLog;
@@ -126,7 +129,10 @@ public:
 	BOOL	m_bStarting;
 	int		m_nLogFileCount;
 
+	int		m_nEnsureVisibleItem;
+
 	void	ShowLogFileCount();
+	BOOL	IsLogItemVisible(int nItem);
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -155,6 +161,7 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:
+	void VisibleKeyLog(int& nCurrentIndex, std::vector<int>& vecData, BOOL bCtrlPressed, BOOL bShiftPressed);
 	void FilterLatestConsoleStartup();
 	void CleanMemory();
 	void OnBnClickedButtonReload();

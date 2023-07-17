@@ -228,6 +228,7 @@ BOOL CLogViewerDlg::OnInitDialog()
 	//AfxBeginThread(LoadCurrentHourThread, this);
 
 	m_bStarting = FALSE;
+	OnBnClickedButtonReload();
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -280,10 +281,24 @@ BOOL CLogViewerDlg::PreTranslateMessage(MSG* pMsg)
 		if (pMsg->wParam == VK_ESCAPE)
 			return TRUE;
 
+		BOOL bCtrlPressed = GetKeyState(VK_CONTROL) & 0x8000;
+		BOOL bShiftPressed = GetKeyState(VK_SHIFT) & 0x8000;
 		if (pMsg->wParam == VK_RETURN)
 		{
-			OnReturnPressed(GetKeyState(VK_CONTROL) & 0x8000, GetKeyState(VK_SHIFT) & 0x8000);
+			OnReturnPressed(bCtrlPressed, bShiftPressed);
 			return TRUE;
+		}
+
+		if (GetFocus() == m_pLogList)
+		{
+			if (pMsg->wParam == 69)
+			{
+				VisibleKeyLog(m_nCurrentErrorItemIndex, m_vecErrorLog, bCtrlPressed, bShiftPressed);
+			}
+			else if (pMsg->wParam == 87)
+			{
+				VisibleKeyLog(m_nCurrentWarningItemIndex, m_vecWarningLog, bCtrlPressed, bShiftPressed);
+			}
 		}
 	}
 
@@ -400,9 +415,9 @@ void CLogViewerDlg::InsertLog(const LogDetail& logDetail)
 	int nItem = m_pLogList->GetItemCount();
 	m_pLogList->InsertItem(nItem, "", logDetail.nLogSeverity);
 	if (logDetail.nLogSeverity >= 3)
-		m_nErrorCount++;
+		m_vecErrorLog.push_back(nItem);
 	else if (logDetail.nLogSeverity == 2)
-		m_nWarningCount++;
+		m_vecWarningLog.push_back(nItem);
 
 	int nSubItem = 1;
 	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strDateTime);
@@ -861,6 +876,7 @@ void CLogViewerDlg::OnButtonRefresh()
 	}	
 
 	AfterLoad();
+	m_pLogList->SetFocus();
 }
 
 void CLogViewerDlg::CleanMemory()
@@ -938,6 +954,7 @@ void CLogViewerDlg::OnBnClickedButtonReload()
 	}
 	
 	AfterLoad();
+	m_pLogList->SetFocus();
 }
 
 
@@ -981,10 +998,11 @@ void CLogViewerDlg::BeforeLoad()
 		return;
 	}
 
-	
+	m_nCurrentErrorItemIndex = -1;
+	m_nCurrentWarningItemIndex = -1;
 	m_bWorking = TRUE;
-	m_nErrorCount = 0;
-	m_nWarningCount = 0;
+	m_vecErrorLog.clear();
+	m_vecWarningLog.clear();
 	m_dtNow = COleDateTime::GetCurrentTime();
 	m_pDlgWait->Show();
 	UpdateData();
@@ -1027,7 +1045,8 @@ void CLogViewerDlg::AfterLoad()
 	
 	COleDateTimeSpan timeSpan = COleDateTime::GetCurrentTime() - m_dtNow;
 	CString strTitle;
-	strTitle.Format("LogViewer - Total %d logs, %d Error logs, %d Warning logs, takes %d seconds.", m_pLogList->GetItemCount(), m_nErrorCount, m_nWarningCount, (int)timeSpan.GetTotalSeconds());
+	strTitle.Format("LogViewer - Total %d logs, %d Error logs, %d Warning logs, takes %d seconds.", m_pLogList->GetItemCount(), 
+		(int)m_vecErrorLog.size(), (int)m_vecWarningLog.size(), (int)timeSpan.GetTotalSeconds());
 	SetWindowText(strTitle);
 
 	m_bWorking = FALSE;
@@ -1035,9 +1054,7 @@ void CLogViewerDlg::AfterLoad()
 	{
 		m_pLogList->EnsureVisible(m_nItemForLastSelectedRawLog, TRUE);
 		m_pLogList->SetItemState(m_nItemForLastSelectedRawLog, LVIS_SELECTED, LVIS_SELECTED);
-	}
-
-	//m_pLogList->SetFocus();
+	}	
 }
 
 void CLogViewerDlg::OnEnChangeEditSearch()
@@ -1104,6 +1121,80 @@ void CLogViewerDlg::OnReturnPressed(BOOL bCtrlPressed, BOOL bShiftPressed)
 	{
 		OnButtonRefresh();
 	}
+}
+
+void CLogViewerDlg::VisibleKeyLog(int& nCurrentIndex, vector<int>& vecData, BOOL bCtrlPressed, BOOL bShiftPressed)
+{
+	if (vecData.size() == 0)
+		return;
+	
+	if (bShiftPressed)
+	{
+		if (nCurrentIndex == 0)
+			return;
+		
+		if (bCtrlPressed)
+			nCurrentIndex = 0;
+		else
+		{
+			nCurrentIndex--;
+		}
+	}
+	else
+	{
+		if (nCurrentIndex >= (int)vecData.size() - 1)
+			return;
+		
+		if (bCtrlPressed)
+		{
+			nCurrentIndex = (int)vecData.size() - 1;
+		}
+		else
+		{
+			nCurrentIndex++;
+		}			
+	}
+
+	POSITION pos = m_pLogList->GetFirstSelectedItemPosition();
+	for(;;)
+	{
+		int nItem = m_pLogList->GetNextSelectedItem(pos);
+		if (nItem == -1)
+			break;
+		m_pLogList->SetItemState(nItem, 0, LVIS_SELECTED);
+		if (pos == NULL)
+			break;
+	}
+	
+	m_pLogList->EnsureVisible(vecData[nCurrentIndex], vecData[nCurrentIndex]);
+	m_pLogList->SetItemState(vecData[nCurrentIndex], LVIS_SELECTED, LVIS_SELECTED);
+
+}
+
+BOOL CLogViewerDlg::IsLogItemVisible(int nItem)
+{
+	CRect itemRect;
+	if (m_pLogList->GetItemRect(nItem, &itemRect, LVIR_BOUNDS))
+	{
+		CRect clientRect;
+		m_pLogList->GetClientRect(&clientRect);
+
+		return clientRect.PtInRect(itemRect.TopLeft()) || clientRect.PtInRect(itemRect.BottomRight());
+	}
+
+	return FALSE;
+}
+
+int CLogViewerDlg::FindLastVisibleItem(const vector<int>& vecData)
+{
+	CRect itemRect;
+	for (int i = vecData.size() - 1; i >= 0; i--)
+	{
+		if (IsLogItemVisible(vecData[i]))
+			return vecData[i];
+	}
+
+	return -1;
 }
 
 void CLogViewerDlg::ChangeHighlightedItem(int nNewItemIndex)
