@@ -60,7 +60,7 @@ public:
 	CString m_strLogHome;
 	BOOL GetLogDir();
 	void AddModule(CString strModuleNumber, CString strModuleName);
-	void BeforeLoad();
+	BOOL BeforeLoad();
 	void AfterLoad();
 	
 	void EnableHourControl(BOOL bEnable);

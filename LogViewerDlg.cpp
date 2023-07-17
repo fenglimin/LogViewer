@@ -855,7 +855,8 @@ void CLogViewerDlg::OnItemClickModuleList(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CLogViewerDlg::OnButtonRefresh()
 {
-	BeforeLoad();
+	if (!BeforeLoad())
+		return;
 
 	if (m_bLatestConsoleStartupOnly)
 	{
@@ -929,7 +930,9 @@ void CLogViewerDlg::ShowLogFileCount()
 
 void CLogViewerDlg::OnBnClickedButtonReload()
 {
-	BeforeLoad();
+	if (!BeforeLoad())
+		return;
+
 	CleanMemory();
 	
 	m_vecLogFile.clear();
@@ -984,18 +987,18 @@ void CLogViewerDlg::SetRawLogContent(int nItem)
 }
 
 
-void CLogViewerDlg::BeforeLoad()
+BOOL CLogViewerDlg::BeforeLoad()
 {
 	if (GetSelectedModules() == 0)
 	{
 		AfxMessageBox("Please select at least one Module!");
-		return;
+		return FALSE;
 	}
 
 	if (m_nLogFileCount == 0)
 	{
 		AfxMessageBox("Please select at least one log file!");
-		return;
+		return FALSE;
 	}
 
 	m_nCurrentErrorItemIndex = -1;
@@ -1033,6 +1036,8 @@ void CLogViewerDlg::BeforeLoad()
 		m_vecFilterKeyword.push_back("[SCANNER STATE]");
 	if (m_bPerformance)
 		m_vecFilterKeyword.push_back("PERFORMANCE");
+
+	return TRUE;
 }
 
 
