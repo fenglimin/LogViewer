@@ -469,10 +469,11 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 	{
 		ifs.getline(sNextLine, 1023);
 		CString strNextLine = sNextLine;
-		if ( strNextLine.Left(10) != strDate && !strNextLine.IsEmpty())
+		if ( strNextLine.Left(10) != strDate)
 		{
 			strCurLine += strNextLine;
-			continue;
+			if (ifs.good())
+				continue;
 		}
 		
 		if ( strCurLine == "")
@@ -1458,12 +1459,65 @@ void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 
-	if (pNMItemActivate->iSubItem == 3)
-		SetDlgItemText(IDC_EDIT_PROCESS_ID, m_pLogList->GetItemText(pNMItemActivate->iItem, pNMItemActivate->iSubItem));
-	else if (pNMItemActivate->iSubItem == 4)
-		SetDlgItemText(IDC_EDIT_THREAD_ID, m_pLogList->GetItemText(pNMItemActivate->iItem, pNMItemActivate->iSubItem));
-	else if (pNMItemActivate->iSubItem == 6)
-		SetDlgItemText(IDC_EDIT_ERROR_CODE, m_pLogList->GetItemText(pNMItemActivate->iItem, pNMItemActivate->iSubItem));
+	if (pNMItemActivate->iSubItem == 0)
+	{
+		LVITEM lvItem;
+		lvItem.mask = LVIF_IMAGE;
+		lvItem.iItem = pNMItemActivate->iItem;
+		lvItem.iSubItem = 0;
+
+		m_pLogList->GetItem(&lvItem);
+
+		int imageIndex = lvItem.iImage;
+
+		if (m_comboLogSeverity.GetCurSel() == 4 - imageIndex)
+			m_comboLogSeverity.SetCurSel(4);
+		else
+			m_comboLogSeverity.SetCurSel(4 - imageIndex);
+
+		OnButtonRefresh();
+	}
+	else if (pNMItemActivate->iSubItem == 2 || pNMItemActivate->iSubItem == 9)
+	{
+		CString strValue = m_pLogList->GetItemText(pNMItemActivate->iItem, 9);
+
+		OnButtonSelectNone();
+		int nCount = m_pModuleList->GetItemCount();
+		for (int i = 0; i < nCount; i++)
+		{
+			if (m_pModuleList->GetItemText(i, 1) == strValue)
+			{
+				m_pModuleList->SetCheck(i);
+				break;
+			}
+		}
+
+		OnButtonRefresh();
+	}
+	else
+	{
+		int nID = -1;
+		CString strValue = m_pLogList->GetItemText(pNMItemActivate->iItem, pNMItemActivate->iSubItem);
+		if (pNMItemActivate->iSubItem == 3)
+			nID = IDC_EDIT_PROCESS_ID;
+		else if (pNMItemActivate->iSubItem == 4)
+			nID = IDC_EDIT_THREAD_ID;
+		else if (pNMItemActivate->iSubItem == 6)
+			nID = IDC_EDIT_ERROR_CODE;
+
+		if (nID != -1)
+		{
+			CString strOldValue;
+			GetDlgItemText(nID, strOldValue);
+			if (strValue == strOldValue)
+				strValue = "";
+
+			SetDlgItemText(nID, strValue);
+
+			OnButtonRefresh();
+		}
+	}
+
 	
 	*pResult = 0;
 }
