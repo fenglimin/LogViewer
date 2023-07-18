@@ -1171,7 +1171,7 @@ void CLogViewerDlg::VisibleKeyLog(int& nCurrentIndex, vector<int>& vecData, BOOL
 			break;
 	}
 	
-	m_pLogList->EnsureVisible(vecData[nCurrentIndex], vecData[nCurrentIndex]);
+	CenterLogItem(vecData[nCurrentIndex]);
 	m_pLogList->SetItemState(vecData[nCurrentIndex], LVIS_SELECTED, LVIS_SELECTED);
 
 }
@@ -1224,13 +1224,29 @@ void CLogViewerDlg::ChangeHighlightedItem(int nNewItemIndex)
 	m_nCurrentHighlightedItemIndex = nNewItemIndex;
 	LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(m_vecHitedLine[m_nCurrentHighlightedItemIndex]);
 	pLogStatus->bHighlighted = TRUE;
-	m_pLogList->RedrawItems(m_vecHitedLine[m_nCurrentHighlightedItemIndex], m_vecHitedLine[m_nCurrentHighlightedItemIndex]);
-	m_pLogList->EnsureVisible(m_vecHitedLine[m_nCurrentHighlightedItemIndex], TRUE);
+	CenterLogItem(m_vecHitedLine[m_nCurrentHighlightedItemIndex]);
+	
 	SetRawLogContent(m_vecHitedLine[m_nCurrentHighlightedItemIndex]);
 
 	CString strResult;
 	strResult.Format("%d/%d", m_nCurrentHighlightedItemIndex + 1, (int)m_vecHitedLine.size());
 	SetDlgItemText(IDC_STATIC_SEARCH_RESULT, strResult);
+}
+
+void CLogViewerDlg::CenterLogItem(int nItem)
+{
+	m_pLogList->RedrawItems(nItem, nItem);
+
+	CRect clientRect;
+	m_pLogList->GetClientRect(&clientRect);
+
+	CRect itemRect;
+	m_pLogList->GetItemRect(nItem, &itemRect, LVIR_BOUNDS);
+
+	// Calculate the scroll position to center the item
+	int scrollPos = itemRect.top + (itemRect.Height() / 2) - (clientRect.Height() / 2);
+
+	m_pLogList->Scroll(CSize(0, scrollPos));
 }
 
 void CLogViewerDlg::OnBnClickedButtonHighlightFirst()

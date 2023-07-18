@@ -77,7 +77,8 @@ public:
 	void InitLogList();
 	CLogViewerDlg(CWnd* pParent = NULL);	// standard constructor
 	~CLogViewerDlg();
-
+	void CenterLogItem(int nItem);
+	
 	std::vector<CString> m_vecFilterKeyword;
 	std::vector<LogFile> m_vecLogFile;
 	std::vector<int> m_vecHitedLine;
