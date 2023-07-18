@@ -193,6 +193,8 @@ public:
 	afx_msg void OnBnClickedButtonSelectNoneFile();
 	afx_msg void OnNMClickListFile(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult);
+//	afx_msg void OnNMDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMRDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult);
 };
 
 //{{AFX_INSERT_LOCATION}}

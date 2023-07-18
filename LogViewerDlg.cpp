@@ -179,6 +179,8 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_SELECT_NONE_FILE, &CLogViewerDlg::OnBnClickedButtonSelectNoneFile)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_FILE, &CLogViewerDlg::OnNMClickListFile)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_LOG, &CLogViewerDlg::OnNMDblclkListLog)
+//	ON_NOTIFY(NM_DBLCLK, IDC_LIST_FILE, &CLogViewerDlg::OnNMDblclkListFile)
+	ON_NOTIFY(NM_RDBLCLK, IDC_LIST_FILE, &CLogViewerDlg::OnNMRDblclkListFile)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -467,7 +469,7 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 	{
 		ifs.getline(sNextLine, 1023);
 		CString strNextLine = sNextLine;
-		if ( strNextLine.Left(10) != strDate )
+		if ( strNextLine.Left(10) != strDate && !strNextLine.IsEmpty())
 		{
 			strCurLine += strNextLine;
 			continue;
@@ -1462,6 +1464,17 @@ void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
 		SetDlgItemText(IDC_EDIT_THREAD_ID, m_pLogList->GetItemText(pNMItemActivate->iItem, pNMItemActivate->iSubItem));
 	else if (pNMItemActivate->iSubItem == 6)
 		SetDlgItemText(IDC_EDIT_ERROR_CODE, m_pLogList->GetItemText(pNMItemActivate->iItem, pNMItemActivate->iSubItem));
+	
+	*pResult = 0;
+}
+
+void CLogViewerDlg::OnNMRDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	
+	CString strFileName = m_pLogFileList->GetItemText(pNMItemActivate->iItem, 1);
+	strFileName = m_strLogHome + "\\" + strFileName.Left(10) + "\\" + strFileName;
+	ShellExecute(NULL, "open", "D:\Work\\GreenTools\\NotePad++\\NotePad++.EXE", strFileName, NULL, SW_SHOW);
 	
 	*pResult = 0;
 }
