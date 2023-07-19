@@ -354,7 +354,7 @@ void CLogViewerDlg::OnCustomDrawListCtrl(NMHDR* pNMHDR, LRESULT* pResult)
 			LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(itemIndex);
 			if (pLogStatus->bQueried)
 			{
-				pLVCD->clrTextBk = pLogStatus->bHighlighted? RGB(0, 190, 190) : RGB(0, 240, 240);
+				pLVCD->clrTextBk = pLogStatus->bHighlighted? RGB(0, 240, 240) : RGB(0, 190, 190);
 			}
 			else
 			{
