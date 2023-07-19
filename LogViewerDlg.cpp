@@ -977,6 +977,7 @@ void CLogViewerDlg::OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult)
 	if (pNMLV->uNewState & LVIS_FOCUSED)
 	{
 		SetRawLogContent(pNMLV->iItem);
+		ShowStatistics(pNMLV->iItem);
 	}	
 }
 
@@ -1060,9 +1061,12 @@ void CLogViewerDlg::AfterLoad()
 	m_bWorking = FALSE;
 	if (m_nItemForLastSelectedRawLog != -1)
 	{
-		m_pLogList->EnsureVisible(m_nItemForLastSelectedRawLog, TRUE);
+		CenterLogItem(m_nItemForLastSelectedRawLog);
 		m_pLogList->SetItemState(m_nItemForLastSelectedRawLog, LVIS_SELECTED, LVIS_SELECTED);
-	}	
+		ShowStatistics(m_nItemForLastSelectedRawLog);
+	}
+	else
+		ShowStatistics(0);
 }
 
 void CLogViewerDlg::OnEnChangeEditSearch()
@@ -1177,6 +1181,15 @@ void CLogViewerDlg::VisibleKeyLog(int& nCurrentIndex, vector<int>& vecData, BOOL
 	CenterLogItem(vecData[nCurrentIndex]);
 	m_pLogList->SetItemState(vecData[nCurrentIndex], LVIS_SELECTED, LVIS_SELECTED);
 
+	ShowStatistics(vecData[nCurrentIndex]);
+}
+
+void CLogViewerDlg::ShowStatistics(int nItem)
+{
+	CString strMessage;
+	strMessage.Format("Log List - Total(%d/%d), Error(%d/%d), Warning(%d/%d)", nItem, m_pLogList->GetItemCount(),
+		m_nCurrentErrorItemIndex + 1, (int)m_vecErrorLog.size(), m_nCurrentWarningItemIndex + 1, (int)m_vecWarningLog.size());
+	SetDlgItemText(IDC_STATIC_LOG_GROUP, strMessage);
 }
 
 BOOL CLogViewerDlg::IsLogItemVisible(int nItem)

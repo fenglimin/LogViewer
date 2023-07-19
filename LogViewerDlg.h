@@ -163,6 +163,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	void VisibleKeyLog(int& nCurrentIndex, std::vector<int>& vecData, BOOL bCtrlPressed, BOOL bShiftPressed);
+	void ShowStatistics(int nItem);
 	void FilterLatestConsoleStartup();
 	void CleanMemory();
 	void OnBnClickedButtonReload();
