@@ -82,8 +82,8 @@ CLogViewerDlg::CLogViewerDlg(CWnd* pParent /*=NULL*/)
 	m_strLogContains = _T("");
 	m_bCurrentHour = FALSE;
 	m_bToday = FALSE;
-	m_nEndHour = 0;
-	m_nStartHour = 0;
+	m_nEndHour = m_tStartDay.GetHour();
+	m_nStartHour = m_nEndHour;
 	m_bExclude = FALSE;
 	m_nItemForLastSelectedRawLog = -1;
 	m_bWorking = FALSE;
@@ -214,7 +214,6 @@ BOOL CLogViewerDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	m_dtNow = COleDateTime::GetCurrentTime();
-	
 	InitLogFileList();
 	InitLogList();
 	InitModuleList();
@@ -670,18 +669,18 @@ void CLogViewerDlg::OnCheckCurrentHour()
 	m_bCurrentHour = !m_bCurrentHour;
 	EnableHourControl(!m_bCurrentHour);
 
+	COleDateTime dt = COleDateTime::GetCurrentTime();
+	int nHour = dt.GetHour();
+	m_nEndHour = nHour;
+
 	if ( !m_bCurrentHour )
 	{
-		COleDateTime dt = COleDateTime::GetCurrentTime();
-		int nHour = dt.GetHour();
-
-		m_nEndHour= nHour;
 		if ( nHour > 0 )
 			nHour--;
-		m_nStartHour = nHour;
-		
-		UpdateData(FALSE);
 	}
+
+	m_nStartHour = nHour;
+	UpdateData(FALSE);
 
 	ShowAllLogFiles();
 }
