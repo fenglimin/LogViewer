@@ -485,8 +485,11 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 		LogDetail logDetail;
 
 		logDetail.strRawLog = strSave;
-		logDetail.strDateTime = strSave.Left(23);
-
+		if (strSave.GetAt(19) == '`')
+			logDetail.strDateTime = strSave.Left(19);
+		else
+			logDetail.strDateTime = strSave.Left(23);
+		
 		CStringEx sModuleNumber = strSave.GetField("`", 1);
 		int nModuleNumber = sModuleNumber.AsInt();
 		if (nModuleNumber >= 1000)
@@ -650,17 +653,24 @@ void CLogViewerDlg::OnCheckToday()
 	m_bToday = !m_bToday;
 	EnableDateControl(!m_bToday);
 
+	COleDateTime dt = COleDateTime::GetCurrentTime();
+	int nYear = dt.GetYear();
+	int nMonth = dt.GetMonth();
+	int nStartDay = dt.GetDay();
+	int nEndDay = nStartDay;
 	if ( !m_bToday )
 	{
-		COleDateTime dt = COleDateTime::GetCurrentTime();
-		m_tStartDay.SetDate(dt.GetYear(), dt.GetMonth(), dt.GetDay()-1);
-
+		nStartDay--;
+		
 		m_bCurrentHour = FALSE;
 		m_nStartHour = 0;
-		m_nEndHour = 23;
-		UpdateData(FALSE);
+		m_nEndHour = 23;	
 	}
 
+	m_tStartDay.SetDate(nYear, nMonth, nStartDay);
+	m_tEndDay.SetDate(nYear, nMonth, nEndDay);
+	UpdateData(FALSE);
+	
 	ShowAllLogFiles();
 }
 
@@ -1186,7 +1196,7 @@ void CLogViewerDlg::VisibleKeyLog(int& nCurrentIndex, vector<int>& vecData, BOOL
 void CLogViewerDlg::ShowStatistics(int nItem)
 {
 	CString strMessage;
-	strMessage.Format("Log List - Total(%d/%d), Error(%d/%d), Warning(%d/%d)", nItem, m_pLogList->GetItemCount(),
+	strMessage.Format("Log List - Total(%d/%d), Error(%d/%d), Warning(%d/%d)", nItem+1, m_pLogList->GetItemCount(),
 		m_nCurrentErrorItemIndex + 1, (int)m_vecErrorLog.size(), m_nCurrentWarningItemIndex + 1, (int)m_vecWarningLog.size());
 	SetDlgItemText(IDC_STATIC_LOG_GROUP, strMessage);
 }
