@@ -19,6 +19,9 @@ struct LogStatus
 	BOOL bQueried;		// This log will be queried in the log list(Change background color)
 	BOOL bHighlighted;	// This log will be highlighted in the log list(Change background color and font color)
 	BOOL bSelected;
+
+	int	 nLogFileIndex;
+	int	 nLogContentIndex;
 };
 
 struct LogDetail
@@ -32,8 +35,9 @@ struct LogDetail
 	CString	strCode;
 	CString strLogContent;
 	CString strSourceFileName;
-	CString	strLineNumber;
+	CString	strSourceFileLineNumber;
 
+	int		nRawLogLineNumber;
 	CString strRawLog;
 	LogStatus* pLogStatus;
 };

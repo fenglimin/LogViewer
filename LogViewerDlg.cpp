@@ -393,7 +393,6 @@ void CLogViewerDlg::InitLogList()
 	m_pLogList->InsertColumn(nCol++, "File", LVCFMT_LEFT, 60);
 	m_pLogList->InsertColumn(nCol++, "LineNo", LVCFMT_LEFT, 50);
 	m_pLogList->InsertColumn(nCol++, "MN", LVCFMT_LEFT, 30);
-	m_pLogList->InsertColumn(nCol++, "Raw Log", LVCFMT_LEFT, 0);
 
 	// Create 256 color image lists
 	HIMAGELIST hList = ImageList_Create(16, 18, ILC_COLOR8 | ILC_MASK, 8, 1);
@@ -428,9 +427,8 @@ void CLogViewerDlg::InsertLog(const LogDetail& logDetail)
 	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strLogContent);
 	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strCode);
 	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strSourceFileName);
-	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strLineNumber);
+	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strSourceFileLineNumber);
 	m_pLogList->SetItemText(nItem, nSubItem++, CStringEx(logDetail.nModuleNumber));
-	m_pLogList->SetItemText(nItem, nSubItem++, logDetail.strRawLog);
 
 	m_pLogList->SetItemData(nItem, (DWORD_PTR)logDetail.pLogStatus);
 
@@ -451,22 +449,22 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 		AfxMessageBox("Error reading log file " + CString(strLogFile));
 		return FALSE;
 	}
-
-	
+		
 	CString strShow = "Loading log file ";
 	strShow += strLogFile;
 	m_pDlgWait->UpdateText( strShow, bUpdateSize);
 	
 	LogFile logFile;
-
 	logFile.strLogFileName = strLogFile;
 
+	int nFileIndex = m_vecLogFile.size();
+	int nLineNum = 0;
 	ifs.getline(sCurLine, 1023);
 	CStringEx strCurLine = sCurLine;
-	
-	while (ifs.good())
+	do
 	{
 		ifs.getline(sNextLine, 1023);
+		nLineNum++;
 		CString strNextLine = sNextLine;
 		if ( strNextLine.Left(10) != strDate)
 		{
@@ -483,6 +481,8 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 
 		//SetWindowText(strSave);
 		LogDetail logDetail;
+
+		logDetail.nRawLogLineNumber = nLineNum;
 
 		logDetail.strRawLog = strSave;
 		if (strSave.GetAt(19) == '`')
@@ -514,15 +514,18 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 			logDetail.strLogContent = logDetail.strLogContent.Right(logDetail.strLogContent.GetLength() - logDetail.strProcessId.GetLength() - logDetail.strThreadId.GetLength() - 11);
 		}
 		logDetail.strSourceFileName = strSave.GetField("`", 7);
-		logDetail.strLineNumber = strSave.GetField("`", 8);
+		logDetail.strSourceFileLineNumber = strSave.GetField("`", 8);
 
 		logDetail.pLogStatus = new LogStatus();
+		logDetail.pLogStatus->nLogFileIndex = nFileIndex;
+		logDetail.pLogStatus->nLogContentIndex = logFile.vecLog.size();
+		
 		logFile.vecLog.push_back(logDetail);
 
 		if (!m_bLatestConsoleStartupOnly)
 			ProcessLog(logDetail);
-	}
-
+	} while (ifs.good());
+	
 	ifs.close();
 
 	m_vecLogFile.push_back(logFile);
@@ -994,7 +997,16 @@ void CLogViewerDlg::SetRawLogContent(int nItem)
 {
 	if (!m_bWorking)
 	{
-		m_strLastSelectedRawLog = nItem != -1 ? m_pLogList->GetItemText(nItem, 10) : "";
+		if (nItem == -1)
+		{
+			m_strLastSelectedRawLog = "";			
+		}
+		else
+		{
+			LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(nItem);
+			LogDetail logDetail = m_vecLogFile[pLogStatus->nLogFileIndex].vecLog[pLogStatus->nLogContentIndex];
+			m_strLastSelectedRawLog = logDetail.strRawLog;
+		}
 		SetDlgItemText(IDC_EDIT_RAW_LOG, m_strLastSelectedRawLog);
 	}	
 }
@@ -1068,7 +1080,7 @@ void CLogViewerDlg::AfterLoad()
 	SetWindowText(strTitle);
 
 	m_bWorking = FALSE;
-	if (m_nItemForLastSelectedRawLog != -1)
+	if (m_nItemForLastSelectedRawLog != -1 && m_nItemForLastSelectedRawLog < m_pLogList->GetItemCount())
 	{
 		CenterLogItem(m_nItemForLastSelectedRawLog);
 		m_pLogList->SetItemState(m_nItemForLastSelectedRawLog, LVIS_SELECTED, LVIS_SELECTED);
@@ -1516,6 +1528,16 @@ void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
 
 		OnButtonRefresh();
 	}
+	else if (pNMItemActivate->iSubItem == 5)
+	{
+		LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(pNMItemActivate->iItem);
+		LogFile logFile = m_vecLogFile[pLogStatus->nLogFileIndex];
+		LogDetail logDetail = logFile.vecLog[pLogStatus->nLogContentIndex];
+
+		CString strPara;
+		strPara.Format("\"%s\" -n%d", logFile.strLogFileName, logDetail.nRawLogLineNumber);
+		ShellExecute(NULL, "open", "D:\Work\\GreenTools\\NotePad++\\NotePad++.EXE", strPara, NULL, SW_SHOW);
+	}
 	else
 	{
 		int nID = -1;
@@ -1547,10 +1569,9 @@ void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
 void CLogViewerDlg::OnNMRDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-	
 	CString strFileName = m_pLogFileList->GetItemText(pNMItemActivate->iItem, 1);
 	strFileName = m_strLogHome + "\\" + strFileName.Left(10) + "\\" + strFileName;
-	ShellExecute(NULL, "open", "D:\Work\\GreenTools\\NotePad++\\NotePad++.EXE", strFileName, NULL, SW_SHOW);
+	ShellExecute(NULL, "open", strFileName, NULL, NULL, SW_SHOW);
 	
 	*pResult = 0;
 }
