@@ -84,7 +84,6 @@ CLogViewerDlg::CLogViewerDlg(CWnd* pParent /*=NULL*/)
 	m_bToday = FALSE;
 	m_nEndHour = m_tStartDay.GetHour();
 	m_nStartHour = m_nEndHour;
-	m_bExclude = FALSE;
 	m_nItemForLastSelectedRawLog = -1;
 	m_bWorking = FALSE;
 	m_bLatestConsoleStartupOnly = FALSE;
@@ -566,16 +565,8 @@ void CLogViewerDlg::ProcessLog(const LogDetail& logDetail)
 
 BOOL CLogViewerDlg::FilterLog(const LogDetail& logDetail)
 {
-	if (!m_bExclude)
-	{
-		if (m_bCheckModule && m_saModules[logDetail.nModuleNumber] == "")
-			return FALSE;
-	}
-	else
-	{
-		if (m_saModules[logDetail.nModuleNumber] != "")
-			return FALSE;
-	}
+	if (m_saModules[logDetail.nModuleNumber] == "")
+		return FALSE;
 
 	if (logDetail.nLogSeverity < m_nSeverity)
 		return FALSE;
@@ -748,10 +739,7 @@ void CLogViewerDlg::InitFilter()
 	m_bCurrentHour = TRUE;
 	EnableHourControl(!m_bCurrentHour);
 
-	m_bExclude = FALSE;
-
 	UpdateData(FALSE);
-
 }
 
 void CLogViewerDlg::EnableDateControl(BOOL bEnable)
@@ -863,11 +851,6 @@ int CLogViewerDlg::GetSelectedModules()
 		}
 	}
 	
-	if ( nTotal == nCount )
-		m_bCheckModule = FALSE;
-	else
-		m_bCheckModule = TRUE;
-
 	return nTotal;
 }
 

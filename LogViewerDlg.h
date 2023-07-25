@@ -72,7 +72,6 @@ class CLogViewerDlg : public CDialog
 // Construction
 public:
 	LogConfig	m_logConfig;
-	BOOL	m_bCheckModule;
 	int GetSelectedModules();
 	CString m_saModules[1000];
 	
@@ -135,7 +134,6 @@ public:
 	BOOL	m_bToday;
 	int		m_nEndHour;
 	int		m_nStartHour;
-	BOOL	m_bExclude;
 	CString m_strSearch;
 	CString	m_strLastSelectedRawLog;
 	int		m_nItemForLastSelectedRawLog;
