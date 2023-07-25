@@ -213,6 +213,10 @@ BOOL CLogViewerDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
+	m_logConfig.bIgnoreKnownRepeatedLog = TRUE;
+	m_logConfig.strSourceRoot = "D:\\Work\\Git\\ImageSuite\\GCPACS\\Src";
+	m_logConfig.strNotepadPathName = "D:\\Work\\GreenTools\\NotePad++\\NotePad++.EXE";
+
 	m_dtNow = COleDateTime::GetCurrentTime();
 	InitLogFileList();
 	InitLogList();
@@ -230,6 +234,8 @@ BOOL CLogViewerDlg::OnInitDialog()
 
 	m_bStarting = FALSE;
 	OnBnClickedButtonReload();
+
+
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -461,6 +467,7 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 	int nLineNum = 0;
 	ifs.getline(sCurLine, 1023);
 	CStringEx strCurLine = sCurLine;
+
 	do
 	{
 		ifs.getline(sNextLine, 1023);
@@ -479,7 +486,19 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 		CStringEx strSave = strCurLine;
 		strCurLine = strNextLine;
 
-		//SetWindowText(strSave);
+		int nSize = logFile.vecLog.size();
+		if (m_logConfig.bIgnoreKnownRepeatedLog && nSize > 2)
+		{
+			CString aa = strCurLine.Mid(28, 86);
+			if (logFile.vecLog[nSize - 2].strLogContent == "[DIP COM] CDRManager::GetNotReadyReason success: Exposures Disabled" &&
+				logFile.vecLog[nSize - 1].strLogContent == "[DIP Event] DeviceManagerStateChanged: State changed to Not ready.")
+			{
+				if (strCurLine.Mid(28, 86) == "[DIP COM] CDRManager::GetNotReadyReason success: Exposures Disabled``DRManager.cpp`778" ||
+					strCurLine.Mid(28, 90) == "[DIP Event] DeviceManagerStateChanged: State changed to Not ready.``DREventHandler.cpp`341")
+					continue;
+			}			
+		}
+
 		LogDetail logDetail;
 
 		logDetail.nRawLogLineNumber = nLineNum;
@@ -519,7 +538,7 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 		logDetail.pLogStatus = new LogStatus();
 		logDetail.pLogStatus->nLogFileIndex = nFileIndex;
 		logDetail.pLogStatus->nLogContentIndex = logFile.vecLog.size();
-		
+
 		logFile.vecLog.push_back(logDetail);
 
 		if (!m_bLatestConsoleStartupOnly)
@@ -617,25 +636,24 @@ void CLogViewerDlg::InitModuleList()
 	m_pModuleList->InsertColumn(1, "No", LVCFMT_LEFT, 30);
 	m_pModuleList->InsertColumn(2, "Name", LVCFMT_LEFT, 120);
 
-	AddModule("11", "SMS Server");
-	AddModule("12", "Print Server");
-	AddModule("14", "Worklist Panel");
-	AddModule("16", "Service Manager");
-	AddModule("30", "Task Manager");
-	AddModule("33", "Oam Server");
-	AddModule("34", "OAM Panel");
-	AddModule("35", "Rule Server");
-	AddModule("36", "Eclipse");
-	AddModule("47", "PDC Sender Server");
-	AddModule("52", "SSCU");
-	AddModule("53", "SSCP Server");
-	AddModule("56", "Acq Server");
-	AddModule("59", "Multi Recordset");
-	AddModule("65", "Framework");
-	AddModule("66", "Audit Server");
-	AddModule("77", "MWL Server");	
-	AddModule("93", "Device Manager");	
-	AddModule("94", "Acq Panel");	
+	AddModule("11", "SMS Server", "Server\\SMS", "SMS.vcxproj");
+	AddModule("12", "Print Server", "Server\\PrintServer", "PrintServer.vcxproj");
+	AddModule("16", "Service Manager", "Server\\ServiceManager", "ServiceManager.vcxproj");
+	AddModule("30", "Task Manager", "Server\\TaskManager", "TaskManager.vcxproj");
+	AddModule("33", "Oam Server", "Server\\OamServer", "OamServer.vcxproj");
+	AddModule("34", "OAM Panel", "Client\\OAMPANEL", "OamPanel.vcxproj");
+	AddModule("35", "Rule Server", "Server\\RuleServer", "RuleServer.vcxproj");
+	AddModule("36", "Eclipse", "Client\\EclipseTool", "EclipseTool.vcxproj");
+	AddModule("47", "PDC Sender Server", "Server\\PdcSender\\PdcSenderServer", "PdcSenderServer.vcxproj");
+	AddModule("52", "SSCU", "Server\\SSCU", "SSCU.vcxproj");
+	AddModule("53", "SSCP Server", "Server\\SSCPServer", "SscpServer.vcxproj");
+	AddModule("56", "Acq Server", "Server\\AcquisitionServer", "AcquisitionServer.vcxproj");
+	AddModule("59", "Multi Recordset", "Server\\QRSCU\\MultiRecordSet", "MRS.vcxproj");
+	AddModule("65", "Framework", "Client\\FRAMEWORK", "framework.vcxproj");
+	AddModule("66", "Audit Server", "Server\\AuditServer", "AuditServer.vcxproj");
+	AddModule("77", "MWL Server", "Server\\MWL", "mwl.vcxproj");	
+	AddModule("93", "Device Manager", "Client\\DeviceManager\\DeviceManager", "DeviceManager.vcxproj");	
+	AddModule("94", "Acq Panel", "Client\\AcqPanel", "AcqPanel.vcxproj");	
 }
 
 void CLogViewerDlg::InitLogFileList()
@@ -748,10 +766,18 @@ void CLogViewerDlg::EnableHourControl(BOOL bEnable)
 	GetDlgItem(IDC_EDIT_END_HOUR)->EnableWindow(bEnable);
 }
 
-void CLogViewerDlg::AddModule(CString strModuleNumber, CString strModuleName)
+void CLogViewerDlg::AddModule(const CString& strModuleId, const CString& strModuleName, const CString& strProjectDir, const CString& strProjectFile)
 {
+	ModuleDetail moduleDetail;
+	moduleDetail.strModuleId = strModuleId;
+	moduleDetail.strModuleName = strModuleName;
+	moduleDetail.strProjectDir = strProjectDir;
+	moduleDetail.strProjectFile = strProjectFile;
+
+	m_vecModule.push_back(moduleDetail);
+	
 	int nPos = m_pModuleList->InsertItem(m_pModuleList->GetItemCount(), "");
-	m_pModuleList->SetItemText(nPos, 1, strModuleNumber);
+	m_pModuleList->SetItemText(nPos, 1, strModuleId);
 	m_pModuleList->SetItemText(nPos, 2, strModuleName);
 }
 
@@ -1489,6 +1515,37 @@ void CLogViewerDlg::OnNMClickListFile(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
+CString CLogViewerDlg::FindSourceFilePath(const CString & strModuleId, const CString & strSourceFileName)
+{
+	for (int i = 0; i < m_vecModule.size(); i++)
+	{
+		if (m_vecModule[i].strModuleId == strModuleId)
+		{
+			CString strProjectFilePathName = m_logConfig.strSourceRoot + "\\" + m_vecModule[i].strProjectDir + "\\" + m_vecModule[i].strProjectFile;
+
+			char sCurLine[1024];
+			ifstream ifs(strProjectFilePathName);
+			while (ifs.good())
+			{
+				ifs.getline(sCurLine, 1023);
+				CStringEx strLine(sCurLine);
+				if (strLine.Find(strSourceFileName) != -1)
+				{
+					CString strRelativePath = strLine.GetDelimitedField("\"", strSourceFileName, 0);
+					strRelativePath = strRelativePath.Right(strRelativePath.GetLength() - 1);
+					return m_logConfig.strSourceRoot + "\\" + m_vecModule[i].strProjectDir + "\\" + strRelativePath + strSourceFileName;
+				}
+			}
+
+			AfxMessageBox("Cannot find source file " + strSourceFileName + " in project file " + strProjectFilePathName);
+			return "";
+		}
+	}
+
+	AfxMessageBox("Cannot find module with id " + strModuleId);
+	return "";
+}
+
 void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
@@ -1536,7 +1593,21 @@ void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
 
 		CString strPara;
 		strPara.Format("\"%s\" -n%d", logFile.strLogFileName, logDetail.nRawLogLineNumber);
-		ShellExecute(NULL, "open", "D:\Work\\GreenTools\\NotePad++\\NotePad++.EXE", strPara, NULL, SW_SHOW);
+		ShellExecute(NULL, "open", m_logConfig.strNotepadPathName, strPara, NULL, SW_SHOW);
+	}
+	else if (pNMItemActivate->iSubItem == 7 || pNMItemActivate->iSubItem == 8)
+	{
+		CString strSourceFileName = m_pLogList->GetItemText(pNMItemActivate->iItem, 7);
+		CString strSourceFileLineNo = m_pLogList->GetItemText(pNMItemActivate->iItem, 8);
+		CString strModuleId = m_pLogList->GetItemText(pNMItemActivate->iItem, 9);
+		CString strSourceFilePath = FindSourceFilePath(strModuleId, strSourceFileName);
+
+		if (!strSourceFilePath.IsEmpty())
+		{
+			CString strPara;
+			strPara.Format("\"%s\" -n%s", strSourceFilePath, strSourceFileLineNo);
+			ShellExecute(NULL, "open", m_logConfig.strNotepadPathName, strPara, NULL, SW_SHOW);			
+		}
 	}
 	else
 	{

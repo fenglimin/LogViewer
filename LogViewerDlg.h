@@ -13,6 +13,23 @@
 /////////////////////////////////////////////////////////////////////////////
 // CLogViewerDlg dialog
 
+struct LogConfig
+{
+	CString	strSourceRoot;
+	CString strNotepadPathName;
+
+	BOOL bIgnoreKnownRepeatedLog;
+};
+
+struct ModuleDetail
+{
+	CString	strModuleId;
+	CString	strModuleName;
+	CString strProjectDir;
+	CString strProjectFile;
+	
+};
+
 struct LogStatus
 {
 	BOOL bFiltered;		// This log will be shown in Log list
@@ -54,6 +71,7 @@ class CLogViewerDlg : public CDialog
 {
 // Construction
 public:
+	LogConfig	m_logConfig;
 	BOOL	m_bCheckModule;
 	int GetSelectedModules();
 	CString m_saModules[1000];
@@ -63,7 +81,7 @@ public:
 	void LoadDayLog(CString strDate, BOOL bUpdateSize);
 	CString m_strLogHome;
 	BOOL GetLogDir();
-	void AddModule(CString strModuleNumber, CString strModuleName);
+	void AddModule(const CString& strModuleId, const CString& strModuleName, const CString& strProjectDir = "", const CString& strProjectFile = "");
 	BOOL BeforeLoad();
 	void AfterLoad();
 	
@@ -83,6 +101,7 @@ public:
 	~CLogViewerDlg();
 	void CenterLogItem(int nItem);
 	
+	std::vector<ModuleDetail> m_vecModule;
 	std::vector<CString> m_vecFilterKeyword;
 	std::vector<LogFile> m_vecLogFile;
 	std::vector<int> m_vecHitedLine;
@@ -197,7 +216,8 @@ public:
 	afx_msg void OnEnChangeEditEndHour();
 	afx_msg void OnBnClickedButtonSelectNoneFile();
 	afx_msg void OnNMClickListFile(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult);
+	CString FindSourceFilePath(const CString& strModuleId, const CString& strSourceFileName);
+void OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult);
 //	afx_msg void OnNMDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMRDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult);
 };
