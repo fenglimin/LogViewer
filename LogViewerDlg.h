@@ -75,7 +75,8 @@ public:
 	LogConfig	m_logConfig;
 	int GetSelectedModules();
 	CString m_saModules[1000];
-	
+
+	BOOL	m_bAllModuleSelected;
 	int		m_nSeverity;
 	COleDateTime m_dtNow;
 	void LoadDayLog(CString strDate, BOOL bUpdateSize);
@@ -218,6 +219,7 @@ public:
 void OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult);
 //	afx_msg void OnNMDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMRDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult);
+	CString FindFileRecursive(const CString& directory, const CString& fileName);
 };
 
 //{{AFX_INSERT_LOCATION}}

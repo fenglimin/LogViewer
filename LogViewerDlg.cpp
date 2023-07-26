@@ -96,6 +96,7 @@ CLogViewerDlg::CLogViewerDlg(CWnd* pParent /*=NULL*/)
 	m_bScannerState = FALSE;
 	m_bPerformance = FALSE;
 	m_bStarting = TRUE;
+	m_bAllModuleSelected = TRUE;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -389,7 +390,7 @@ BOOL CLogViewerDlg::LoadConfig()
 	GetPrivateProfileString("Setting", "LogRoot", "C:\\Image Suite\\Log", (char*)Temp, 128, szConfigFile);
 	m_logConfig.strLogRoot = Temp;
 
-	GetPrivateProfileString("Setting", "SourceRoot", "D:\\Work\\Git\\ImageSuite\\GCPACS\\Src", (char*)Temp, 128, szConfigFile);
+	GetPrivateProfileString("Setting", "SourceRoot", "D:\\Work\\Git\\ImageSuite", (char*)Temp, 128, szConfigFile);
 	m_logConfig.strSourceRoot = Temp;
 
 	GetPrivateProfileString("Setting", "NotePad++", "D:\\Work\\GreenTools\\NotePad++\\NotePad++.EXE", (char*)Temp, 128, szConfigFile);
@@ -591,7 +592,7 @@ void CLogViewerDlg::ProcessLog(const LogDetail& logDetail)
 
 BOOL CLogViewerDlg::FilterLog(const LogDetail& logDetail)
 {
-	if (m_saModules[logDetail.nModuleNumber] == "")
+	if (!m_bAllModuleSelected && m_saModules[logDetail.nModuleNumber] == "")
 		return FALSE;
 
 	if (logDetail.nLogSeverity < m_nSeverity)
@@ -653,24 +654,27 @@ void CLogViewerDlg::InitModuleList()
 	m_pModuleList->InsertColumn(1, "No", LVCFMT_LEFT, 30);
 	m_pModuleList->InsertColumn(2, "Name", LVCFMT_LEFT, 120);
 
-	AddModule("11", "SMS Server", "Server\\SMS", "SMS.vcxproj");
-	AddModule("12", "Print Server", "Server\\PrintServer", "PrintServer.vcxproj");
-	AddModule("16", "Service Manager", "Server\\ServiceManager", "ServiceManager.vcxproj");
-	AddModule("30", "Task Manager", "Server\\TaskManager", "TaskManager.vcxproj");
-	AddModule("33", "Oam Server", "Server\\OamServer", "OamServer.vcxproj");
-	AddModule("34", "OAM Panel", "Client\\OAMPANEL", "OamPanel.vcxproj");
-	AddModule("35", "Rule Server", "Server\\RuleServer", "RuleServer.vcxproj");
-	AddModule("36", "Eclipse", "Client\\EclipseTool", "EclipseTool.vcxproj");
-	AddModule("47", "PDC Sender Server", "Server\\PdcSender\\PdcSenderServer", "PdcSenderServer.vcxproj");
-	AddModule("52", "SSCU", "Server\\SSCU", "SSCU.vcxproj");
-	AddModule("53", "SSCP Server", "Server\\SSCPServer", "SscpServer.vcxproj");
-	AddModule("56", "Acq Server", "Server\\AcquisitionServer", "AcquisitionServer.vcxproj");
-	AddModule("59", "Multi Recordset", "Server\\QRSCU\\MultiRecordSet", "MRS.vcxproj");
-	AddModule("65", "Framework", "Client\\FRAMEWORK", "framework.vcxproj");
-	AddModule("66", "Audit Server", "Server\\AuditServer", "AuditServer.vcxproj");
-	AddModule("77", "MWL Server", "Server\\MWL", "mwl.vcxproj");	
-	AddModule("93", "Device Manager", "Client\\DeviceManager\\DeviceManager", "DeviceManager.vcxproj");	
-	AddModule("94", "Acq Panel", "Client\\AcqPanel", "AcqPanel.vcxproj");	
+	AddModule("0", "MiniPacsWeb", "", "");
+	AddModule("1", "MiniPacsHost", "WebPacs", "");
+	AddModule("11", "SMS Server", "GCPACS\\Src\\Server\\SMS", "SMS.vcxproj");
+	AddModule("12", "Print Server", "GCPACS\\Src\\Server\\PrintServer", "PrintServer.vcxproj");
+	AddModule("16", "Service Manager", "GCPACS\\Src\\Server\\ServiceManager", "ServiceManager.vcxproj");
+	AddModule("30", "Task Manager", "GCPACS\\Src\\Server\\TaskManager", "TaskManager.vcxproj");
+	AddModule("33", "Oam Server", "GCPACS\\Src\\Server\\OamServer", "OamServer.vcxproj");
+	AddModule("34", "OAM Panel", "GCPACS\\Src\\Client\\OAMPANEL", "OamPanel.vcxproj");
+	AddModule("35", "Rule Server", "GCPACS\\Src\\Server\\RuleServer", "RuleServer.vcxproj");
+	AddModule("36", "Eclipse", "GCPACS\\Src\\Client\\EclipseTool", "EclipseTool.vcxproj");
+	AddModule("47", "PDC Sender Server", "GCPACS\\Src\\Server\\PdcSender\\PdcSenderServer", "PdcSenderServer.vcxproj");
+	AddModule("52", "SSCU", "GCPACS\\Src\\Server\\SSCU", "SSCU.vcxproj");
+	AddModule("53", "SSCP Server", "GCPACS\\Src\\Server\\SSCPServer", "SscpServer.vcxproj");
+	AddModule("56", "Acq Server", "GCPACS\\Src\\Server\\AcquisitionServer", "AcquisitionServer.vcxproj");
+	AddModule("59", "Multi Recordset", "GCPACS\\Src\\Server\\QRSCU\\MultiRecordSet", "MRS.vcxproj");
+	AddModule("65", "Framework", "GCPACS\\Src\\Client\\FRAMEWORK", "framework.vcxproj");
+	AddModule("66", "Audit Server", "GCPACS\\Src\\Server\\AuditServer", "AuditServer.vcxproj");
+	AddModule("77", "MWL Server", "GCPACS\\Src\\Server\\MWL", "mwl.vcxproj");
+	AddModule("93", "Device Manager", "GCPACS\\Src\\Client\\DeviceManager\\DeviceManager", "DeviceManager.vcxproj");
+	AddModule("94", "Acq Panel", "GCPACS\\Src\\Client\\AcqPanel", "AcqPanel.vcxproj");
+	AddModule("601", "OptionService", "", "");
 }
 
 void CLogViewerDlg::InitLogFileList()
@@ -843,6 +847,7 @@ int CLogViewerDlg::GetSelectedModules()
 	for ( i = 0; i < 1000; i ++ )
 		m_saModules[i] = "";
 
+	
 	int nCount = m_pModuleList->GetItemCount();
 	for ( i = 0; i < nCount; i ++)
 	{
@@ -853,7 +858,8 @@ int CLogViewerDlg::GetSelectedModules()
 			m_saModules[strModuleNumber.AsInt()] = m_pModuleList->GetItemText(i, 2);
 		}
 	}
-	
+
+	m_bAllModuleSelected = nTotal == nCount;
 	return nTotal;
 }
 
@@ -1507,6 +1513,19 @@ CString CLogViewerDlg::FindSourceFilePath(const CString & strModuleId, const CSt
 	{
 		if (m_vecModule[i].strModuleId == strModuleId)
 		{
+			if (strModuleId == "0")
+			{
+				// Ignore code for web client
+				return "";
+			}
+			
+			if (strModuleId == "1")
+			{
+				// Special logic for web host
+				CString strSourceRoot = m_logConfig.strSourceRoot + "\\" + m_vecModule[i].strProjectDir;
+				return FindFileRecursive(strSourceRoot, strSourceFileName);
+			}
+
 			CString strProjectFilePathName = m_logConfig.strSourceRoot + "\\" + m_vecModule[i].strProjectDir + "\\" + m_vecModule[i].strProjectFile;
 
 			char sCurLine[1024];
@@ -1631,4 +1650,46 @@ void CLogViewerDlg::OnNMRDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult)
 	ShellExecute(NULL, "open", strFileName, NULL, NULL, SW_SHOW);
 	
 	*pResult = 0;
+}
+
+CString CLogViewerDlg::FindFileRecursive(const CString& directory, const CString& fileName)
+{
+	CFileFind finder;
+	CString searchPath = directory + "\\*.*";
+
+	BOOL bWorking = finder.FindFile(searchPath);
+
+	while (bWorking)
+	{
+		bWorking = finder.FindNextFile();
+
+		if (finder.IsDots())
+			continue;
+
+		if (finder.IsDirectory()) 
+		{
+			// Recursively search in subdirectories
+			CString subdirPath = finder.GetFilePath();
+			CString strToken = subdirPath.Right(4).MakeLower();
+			if (strToken == "\\.vs" || strToken == "\\obj" || strToken == "\\bin")
+				continue;
+
+			if (subdirPath.Right(12).MakeLower() == "\\node_modules")
+				continue;
+			
+			CString foundFilePath = FindFileRecursive(subdirPath, fileName);
+			if (!foundFilePath.IsEmpty()) 
+			{
+				return foundFilePath; // Return the full path of the found file
+			}
+		}
+		else if (finder.IsArchived()) 
+		{
+			CString strFileName = finder.GetFileName();
+			if (strFileName.CompareNoCase(fileName) == 0)
+				return finder.GetFilePath(); // Return the full path of the found file
+		}
+	}
+
+	return "";
 }
