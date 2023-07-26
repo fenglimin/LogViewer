@@ -1575,17 +1575,26 @@ void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
 	}
 	else if (pNMItemActivate->iSubItem == 2 || pNMItemActivate->iSubItem == 9)
 	{
-		CString strValue = m_pLogList->GetItemText(pNMItemActivate->iItem, 9);
+		CStringEx strValue = m_pLogList->GetItemText(pNMItemActivate->iItem, 9);
 
-		OnButtonSelectNone();
-		int nCount = m_pModuleList->GetItemCount();
-		for (int i = 0; i < nCount; i++)
+		int nSelectedModuleCount = GetSelectedModules();
+		if (nSelectedModuleCount == 1 && m_saModules[strValue.AsInt()] != "")
 		{
-			if (m_pModuleList->GetItemText(i, 1) == strValue)
+			OnButtonSelectAll();
+		}
+		else
+		{
+			OnButtonSelectNone();
+			int nCount = m_pModuleList->GetItemCount();
+			for (int i = 0; i < nCount; i++)
 			{
-				m_pModuleList->SetCheck(i);
-				break;
+				if (m_pModuleList->GetItemText(i, 1) == strValue)
+				{
+					m_pModuleList->SetCheck(i);
+					break;
+				}
 			}
+
 		}
 
 		OnButtonRefresh();
