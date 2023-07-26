@@ -1617,6 +1617,9 @@ void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
 	{
 		int nID = -1;
 		CString strValue = m_pLogList->GetItemText(pNMItemActivate->iItem, pNMItemActivate->iSubItem);
+		if (strValue == "")
+			return;
+		
 		if (pNMItemActivate->iSubItem == 3)
 			nID = IDC_EDIT_PROCESS_ID;
 		else if (pNMItemActivate->iSubItem == 4)
