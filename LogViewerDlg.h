@@ -15,6 +15,7 @@
 
 struct LogConfig
 {
+	CString strLogRoot;
 	CString	strSourceRoot;
 	CString strNotepadPathName;
 
@@ -78,8 +79,7 @@ public:
 	int		m_nSeverity;
 	COleDateTime m_dtNow;
 	void LoadDayLog(CString strDate, BOOL bUpdateSize);
-	CString m_strLogHome;
-	BOOL GetLogDir();
+	BOOL LoadConfig();
 	void AddModule(const CString& strModuleId, const CString& strModuleName, const CString& strProjectDir = "", const CString& strProjectFile = "");
 	BOOL BeforeLoad();
 	void AfterLoad();

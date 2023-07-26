@@ -212,17 +212,13 @@ BOOL CLogViewerDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
-	m_logConfig.bIgnoreKnownRepeatedLog = TRUE;
-	m_logConfig.strSourceRoot = "D:\\Work\\Git\\ImageSuite\\GCPACS\\Src";
-	m_logConfig.strNotepadPathName = "D:\\Work\\GreenTools\\NotePad++\\NotePad++.EXE";
-
+	LoadConfig();
+	
 	m_dtNow = COleDateTime::GetCurrentTime();
 	InitLogFileList();
 	InitLogList();
 	InitModuleList();
 	InitFilter();
-
-	GetLogDir();
 
 	OnButtonSelectAll();
 	m_pDlgWait = new CWaitDialog(this);
@@ -376,6 +372,36 @@ void CLogViewerDlg::OnCustomDrawListCtrl(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 }
 
+BOOL CLogViewerDlg::LoadConfig()
+{
+	char	szConfigFile[128], szExePath[255];
+
+	char	Temp[128];
+
+	char *pDest;
+	::GetModuleFileName(NULL, szExePath, 255);
+	pDest = strrchr(szExePath, '\\');
+	*(++pDest) = '\0';
+
+	strcpy(szConfigFile, szExePath);
+	strcat(szConfigFile, "LogViewer.ini");
+
+	GetPrivateProfileString("Setting", "LogRoot", "C:\\Image Suite\\Log", (char*)Temp, 128, szConfigFile);
+	m_logConfig.strLogRoot = Temp;
+
+	GetPrivateProfileString("Setting", "SourceRoot", "D:\\Work\\Git\\ImageSuite\\GCPACS\\Src", (char*)Temp, 128, szConfigFile);
+	m_logConfig.strSourceRoot = Temp;
+
+	GetPrivateProfileString("Setting", "NotePad++", "D:\\Work\\GreenTools\\NotePad++\\NotePad++.EXE", (char*)Temp, 128, szConfigFile);
+	m_logConfig.strNotepadPathName = Temp;
+
+	GetPrivateProfileString("Setting", "IgnoreMR9RepeatedLog", "1", (char*)Temp, 128, szConfigFile);
+	m_logConfig.bIgnoreKnownRepeatedLog = Temp[0] == '1';
+	
+	SetDlgItemText(IDC_EDIT_LOG_DIR, m_logConfig.strLogRoot);
+
+	return TRUE;
+}
 
 void CLogViewerDlg::InitLogList()
 {
@@ -771,7 +797,7 @@ void CLogViewerDlg::AddModule(const CString& strModuleId, const CString& strModu
 
 void CLogViewerDlg::AddLogFile(const CString& strLogFileName)
 {
-	CString strLogFile = m_strLogHome + "\\" + strLogFileName.Left(10) + "\\" + strLogFileName;
+	CString strLogFile = m_logConfig.strLogRoot + "\\" + strLogFileName.Left(10) + "\\" + strLogFileName;
 	ifstream ifs(strLogFile);
 	if (!ifs.good())
 	{
@@ -786,29 +812,6 @@ void CLogViewerDlg::AddLogFile(const CString& strLogFileName)
 	
 	int nPos = m_pLogFileList->InsertItem(m_pLogFileList->GetItemCount(), "");
 	m_pLogFileList->SetItemText(nPos, 1, strLogFileName);
-}
-
-BOOL CLogViewerDlg::GetLogDir()
-{
-	char	szConfigFile[128], szExePath[255];
-
-	char	Temp[128];
-	
-	char *pDest;
-	::GetModuleFileName(NULL, szExePath, 255);	
-	pDest = strrchr(szExePath, '\\');
-	*(++pDest) = '\0';
-	
-	strcpy(szConfigFile, szExePath);
-	strcat(szConfigFile, "config\\Client.ini");
-
-
-	GetPrivateProfileString("LOG","LogHomeDir","C:\\Image Suite\\Log",(char*)Temp,128,szConfigFile);
-
-	m_strLogHome = Temp;
-	SetDlgItemText(IDC_EDIT_LOG_DIR, m_strLogHome);
-
-	return TRUE;
 }
 
 void CLogViewerDlg::LoadDayLog(CString strDate, BOOL bUpdateSize)
@@ -970,7 +973,7 @@ void CLogViewerDlg::OnBnClickedButtonReload()
 
 		CString strFileName = m_pLogFileList->GetItemText(i, 1);
 		CString strDate = strFileName.Left(10);
-		CString strFilePath = m_strLogHome + "\\" + strDate + "\\" + strFileName;
+		CString strFilePath = m_logConfig.strLogRoot + "\\" + strDate + "\\" + strFileName;
 		LoadLogFile((LPTSTR)(LPCTSTR)strFilePath, strDate, bUpdateSize);
 		bUpdateSize = FALSE;
 	}
@@ -1624,7 +1627,7 @@ void CLogViewerDlg::OnNMRDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	CString strFileName = m_pLogFileList->GetItemText(pNMItemActivate->iItem, 1);
-	strFileName = m_strLogHome + "\\" + strFileName.Left(10) + "\\" + strFileName;
+	strFileName = m_logConfig.strLogRoot + "\\" + strFileName.Left(10) + "\\" + strFileName;
 	ShellExecute(NULL, "open", strFileName, NULL, NULL, SW_SHOW);
 	
 	*pResult = 0;
