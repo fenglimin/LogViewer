@@ -121,6 +121,8 @@ void CLogViewerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_LOG_CONTAINS, m_strLogContains);
 	DDX_Text(pDX, IDC_EDIT_PROCESS_ID, m_strProcessId);
 	DDX_Text(pDX, IDC_EDIT_THREAD_ID, m_strThreadId);
+	DDX_Text(pDX, IDC_EDIT_SOURCE_FILE, m_strSourceFile);
+	DDX_Text(pDX, IDC_EDIT_LINE_NO, m_strLineNo);
 	DDX_Text(pDX, IDC_EDIT_SEARCH, m_strSearch);
 	DDX_Check(pDX, IDC_CHECK_CURRENT_HOUR, m_bCurrentHour);
 	DDX_Check(pDX, IDC_CHECK_TODAY, m_bToday);
@@ -179,8 +181,9 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_SELECT_NONE_FILE, &CLogViewerDlg::OnBnClickedButtonSelectNoneFile)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_FILE, &CLogViewerDlg::OnNMClickListFile)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_LOG, &CLogViewerDlg::OnNMDblclkListLog)
-//	ON_NOTIFY(NM_DBLCLK, IDC_LIST_FILE, &CLogViewerDlg::OnNMDblclkListFile)
-	ON_NOTIFY(NM_RDBLCLK, IDC_LIST_FILE, &CLogViewerDlg::OnNMRDblclkListFile)
+//	ON_NOTIFY(NM_RDBLCLK, IDC_LIST_FILE, &CLogViewerDlg::OnNMRDblclkListFile)
+	ON_NOTIFY(NM_RCLICK, IDC_LIST_LOG, &CLogViewerDlg::OnNMRClickListLog)
+	ON_NOTIFY(NM_RCLICK, IDC_LIST_FILE, &CLogViewerDlg::OnNMRClickListFile)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -399,8 +402,6 @@ BOOL CLogViewerDlg::LoadConfig()
 	GetPrivateProfileString("Setting", "IgnoreMR9RepeatedLog", "1", (char*)Temp, 128, szConfigFile);
 	m_logConfig.bIgnoreKnownRepeatedLog = Temp[0] == '1';
 	
-	SetDlgItemText(IDC_EDIT_LOG_DIR, m_logConfig.strLogRoot);
-
 	return TRUE;
 }
 
@@ -621,6 +622,12 @@ BOOL CLogViewerDlg::FilterLog(const LogDetail& logDetail)
 			return FALSE;
 	}
 
+	if (m_strSourceFile != "" && m_strSourceFile != logDetail.strSourceFileName)
+		return FALSE;
+
+	if (m_strLineNo != "" && m_strLineNo != logDetail.strSourceFileLineNumber)
+		return FALSE;
+	
 	return CheckKeyWord(logDetail.strLogContent);
 }
 
@@ -1167,6 +1174,8 @@ void CLogViewerDlg::OnReturnPressed(BOOL bCtrlPressed, BOOL bShiftPressed)
 	}
 	else if (pFocusCtrl == GetDlgItem(IDC_EDIT_ERROR_CODE) ||
 		pFocusCtrl == GetDlgItem(IDC_EDIT_LOG_CONTAINS) ||
+		pFocusCtrl == GetDlgItem(IDC_EDIT_SOURCE_FILE) ||
+		pFocusCtrl == GetDlgItem(IDC_EDIT_LINE_NO) ||
 		pFocusCtrl == GetDlgItem(IDC_EDIT_PROCESS_ID) ||
 		pFocusCtrl == GetDlgItem(IDC_EDIT_THREAD_ID))
 	{
@@ -1336,6 +1345,8 @@ void CLogViewerDlg::OnBnClickedButtonClear()
 	m_strLogContains = "";
 	m_strProcessId = "";
 	m_strThreadId = "";
+	m_strSourceFile = "";
+	m_strLineNo = "";
 	m_bLatestConsoleStartupOnly = FALSE;
 	UpdateData(FALSE);
 }
@@ -1602,30 +1613,6 @@ void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
 
 		OnButtonRefresh();
 	}
-	else if (pNMItemActivate->iSubItem == 5)
-	{
-		LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(pNMItemActivate->iItem);
-		LogFile logFile = m_vecLogFile[pLogStatus->nLogFileIndex];
-		LogDetail logDetail = logFile.vecLog[pLogStatus->nLogContentIndex];
-
-		CString strPara;
-		strPara.Format("\"%s\" -n%d", logFile.strLogFileName, logDetail.nRawLogLineNumber);
-		ShellExecute(NULL, "open", m_logConfig.strNotepadPathName, strPara, NULL, SW_SHOW);
-	}
-	else if (pNMItemActivate->iSubItem == 7 || pNMItemActivate->iSubItem == 8)
-	{
-		CString strSourceFileName = m_pLogList->GetItemText(pNMItemActivate->iItem, 7);
-		CString strSourceFileLineNo = m_pLogList->GetItemText(pNMItemActivate->iItem, 8);
-		CString strModuleId = m_pLogList->GetItemText(pNMItemActivate->iItem, 9);
-		CString strSourceFilePath = FindSourceFilePath(strModuleId, strSourceFileName);
-
-		if (!strSourceFilePath.IsEmpty())
-		{
-			CString strPara;
-			strPara.Format("\"%s\" -n%s", strSourceFilePath, strSourceFileLineNo);
-			ShellExecute(NULL, "open", m_logConfig.strNotepadPathName, strPara, NULL, SW_SHOW);			
-		}
-	}
 	else
 	{
 		int nID = -1;
@@ -1636,7 +1623,11 @@ void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
 			nID = IDC_EDIT_THREAD_ID;
 		else if (pNMItemActivate->iSubItem == 6)
 			nID = IDC_EDIT_ERROR_CODE;
-
+		else if (pNMItemActivate->iSubItem == 7)
+			nID = IDC_EDIT_SOURCE_FILE;
+		else if (pNMItemActivate->iSubItem == 8)
+			nID = IDC_EDIT_LINE_NO;
+		
 		if (nID != -1)
 		{
 			CString strOldValue;
@@ -1650,16 +1641,6 @@ void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
 		}
 	}
 
-	
-	*pResult = 0;
-}
-
-void CLogViewerDlg::OnNMRDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult)
-{
-	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-	CString strFileName = m_pLogFileList->GetItemText(pNMItemActivate->iItem, 1);
-	strFileName = m_logConfig.strLogRoot + "\\" + strFileName.Left(10) + "\\" + strFileName;
-	ShellExecute(NULL, "open", strFileName, NULL, NULL, SW_SHOW);
 	
 	*pResult = 0;
 }
@@ -1704,4 +1685,48 @@ CString CLogViewerDlg::FindFileRecursive(const CString& directory, const CString
 	}
 
 	return "";
+}
+
+void CLogViewerDlg::OnNMRClickListLog(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+
+	if (pNMItemActivate->iSubItem == 5)
+	{
+		LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(pNMItemActivate->iItem);
+		LogFile logFile = m_vecLogFile[pLogStatus->nLogFileIndex];
+		LogDetail logDetail = logFile.vecLog[pLogStatus->nLogContentIndex];
+
+		CString strPara;
+		strPara.Format("\"%s\" -n%d", logFile.strLogFileName, logDetail.nRawLogLineNumber);
+		ShellExecute(NULL, "open", m_logConfig.strNotepadPathName, strPara, NULL, SW_SHOW);
+	}
+	else if (pNMItemActivate->iSubItem == 7 || pNMItemActivate->iSubItem == 8)
+	{
+		CString strSourceFileName = m_pLogList->GetItemText(pNMItemActivate->iItem, 7);
+		CString strSourceFileLineNo = m_pLogList->GetItemText(pNMItemActivate->iItem, 8);
+		CString strModuleId = m_pLogList->GetItemText(pNMItemActivate->iItem, 9);
+		CString strSourceFilePath = FindSourceFilePath(strModuleId, strSourceFileName);
+
+		if (!strSourceFilePath.IsEmpty())
+		{
+			CString strPara;
+			strPara.Format("\"%s\" -n%s", strSourceFilePath, strSourceFileLineNo);
+			ShellExecute(NULL, "open", m_logConfig.strNotepadPathName, strPara, NULL, SW_SHOW);
+		}
+	}
+	
+	*pResult = 0;
+}
+
+
+void CLogViewerDlg::OnNMRClickListFile(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+
+	CString strFileName = m_pLogFileList->GetItemText(pNMItemActivate->iItem, 1);
+	strFileName = m_logConfig.strLogRoot + "\\" + strFileName.Left(10) + "\\" + strFileName;
+	ShellExecute(NULL, "open", strFileName, NULL, NULL, SW_SHOW);
+	
+	*pResult = 0;
 }

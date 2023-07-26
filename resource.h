@@ -30,10 +30,12 @@
 #define IDC_SPIN_END_HOUR               1015
 #define IDC_DATETIMEPICKER_START        1016
 #define IDC_CHECK_EXCLUDE               1017
+#define IDC_EDIT_SOURCE_FILE            1017
 #define IDC_DATETIMEPICKER_END          1018
 #define ID_ACCEPT_RETURN                1019
 #define IDC_EDIT_RAW_LOG                1019
-#define IDC_EDIT_LOG_DIR                1020
+#define IDC_EDIT_LOG_CONTAINS2          1020
+#define IDC_EDIT_LINE_NO                1020
 #define IDC_EDIT_SEARCH                 1021
 #define IDC_STATIC_SEARCH_RESULT        1022
 #define IDC_EDIT_PROCESS_ID             1023

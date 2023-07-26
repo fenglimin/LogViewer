@@ -131,6 +131,8 @@ public:
 	CString	m_strLogContains;
 	CString	m_strProcessId;
 	CString	m_strThreadId;
+	CString	m_strSourceFile;
+	CString	m_strLineNo;
 	BOOL	m_bCurrentHour;
 	BOOL	m_bToday;
 	int		m_nEndHour;
@@ -218,8 +220,10 @@ public:
 	CString FindSourceFilePath(const CString& strModuleId, const CString& strSourceFileName);
 void OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult);
 //	afx_msg void OnNMDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnNMRDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult);
+//	afx_msg void OnNMRDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult);
 	CString FindFileRecursive(const CString& directory, const CString& fileName);
+	afx_msg void OnNMRClickListLog(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMRClickListFile(NMHDR *pNMHDR, LRESULT *pResult);
 };
 
 //{{AFX_INSERT_LOCATION}}
