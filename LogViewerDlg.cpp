@@ -1555,6 +1555,9 @@ void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 
+	if (pNMItemActivate->iItem == -1)
+		return;
+	
 	if (pNMItemActivate->iSubItem == 0)
 	{
 		LVITEM lvItem;
