@@ -1545,7 +1545,7 @@ CString CLogViewerDlg::FindSourceFilePath(const CString & strModuleId, const CSt
 			{
 				ifs.getline(sCurLine, 1023);
 				CStringEx strLine(sCurLine);
-				if (strLine.Find(strSourceFileName) != -1)
+				if (strLine.Find("\"" + strSourceFileName) != -1 || strLine.Find("\\" + strSourceFileName) != -1)
 				{
 					CString strRelativePath = strLine.GetDelimitedField("\"", strSourceFileName, 0);
 					strRelativePath = strRelativePath.Right(strRelativePath.GetLength() - 1);
