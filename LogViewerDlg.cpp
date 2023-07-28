@@ -606,6 +606,7 @@ BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateS
 		logDetail.pLogStatus->nLogContentIndex = logFile.vecLog.size();
 
 		logFile.vecLog.push_back(logDetail);
+		m_arrayLogCount[logDetail.nLogSeverity]++;
 
 		if (!m_bLatestConsoleStartupOnly)
 			ProcessLog(logDetail);
@@ -965,6 +966,11 @@ void CLogViewerDlg::CleanMemory()
 			delete m_vecLogFile[i].vecLog[j].pLogStatus;
 		}
 	}
+
+	for (int i = 0; i < 5; i++)
+	{
+		m_arrayLogCount[i] = 0;
+	}
 }
 
 void CLogViewerDlg::ShowAllLogFiles()
@@ -1150,7 +1156,7 @@ void CLogViewerDlg::AfterLoad()
 	COleDateTimeSpan timeSpan = COleDateTime::GetCurrentTime() - m_dtNow;
 	CString strTitle;
 	strTitle.Format("LogViewer [%s] - Total %d logs, %d Error logs, %d Warning logs, takes %d seconds.", m_logConfig.strLogRoot,
-		m_pLogList->GetItemCount(), (int)m_vecErrorLog.size(), (int)m_vecWarningLog.size(), (int)timeSpan.GetTotalSeconds());
+		GetTotalRawLogCount(), m_arrayLogCount[3] + m_arrayLogCount[4], m_arrayLogCount[2], (int)timeSpan.GetTotalSeconds());
 	SetWindowText(strTitle);
 
 	m_bWorking = FALSE;
@@ -1707,6 +1713,8 @@ void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
 
 			SetDlgItemText(nID, strValue);
 
+			
+
 			OnButtonRefresh();
 		}
 	}
@@ -1869,4 +1877,15 @@ BOOL CLogViewerDlg::FindNoCase(const CString& strContent, const CString& strToke
 	}
 
 	return strContent.Find(strToken) != -1;
+}
+
+int CLogViewerDlg::GetTotalRawLogCount()
+{
+	int nCount = 0;
+	for (int i = 0; i < m_vecLogFile.size(); i++)
+	{
+		nCount += (int)m_vecLogFile[i].vecLog.size();
+	}
+
+	return nCount;
 }

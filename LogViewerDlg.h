@@ -72,6 +72,8 @@ class CLogViewerDlg : public CDialog
 {
 // Construction
 public:
+	int		m_arrayLogCount[5];
+	
 	CString		m_strCommandInput;
 	LogConfig	m_logConfig;
 	int m_bShowProcessAndThreadId;
@@ -86,6 +88,7 @@ public:
 	BOOL LoadConfig();
 	void AddModule(const CString& strModuleId, const CString& strModuleName, const CString& strProjectDir = "", const CString& strProjectFile = "");
 	BOOL BeforeLoad();
+	int		GetTotalRawLogCount();
 	void AfterLoad();
 	
 	void EnableHourControl(BOOL bEnable);
