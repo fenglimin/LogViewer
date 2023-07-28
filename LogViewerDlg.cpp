@@ -242,8 +242,14 @@ BOOL CLogViewerDlg::OnInitDialog()
 		}
 		else
 		{
+			TCHAR path[MAX_PATH];
+			lstrcpyn(path, m_strCommandInput, MAX_PATH);
+			::PathRemoveFileSpec(path);
+			
+			m_logConfig.strLogRoot = path;
+			
 			int nPos = m_pLogFileList->InsertItem(0, "");
-			m_pLogFileList->SetItemText(nPos, 1, m_strCommandInput);
+			m_pLogFileList->SetItemText(nPos, 1, PathFindFileName(m_strCommandInput));
 		}
 	}
 	
@@ -1014,8 +1020,7 @@ void CLogViewerDlg::OnBnClickedButtonReload()
 		}
 		else
 		{
-			strFilePath = strFileName;
-			strFileName = PathFindFileName(strFileName);
+			strFilePath = m_logConfig.strLogRoot + "\\" + strFileName;
 			strDate = strFileName.Left(10);			
 		}
 		
@@ -1132,8 +1137,8 @@ void CLogViewerDlg::AfterLoad()
 	
 	COleDateTimeSpan timeSpan = COleDateTime::GetCurrentTime() - m_dtNow;
 	CString strTitle;
-	strTitle.Format("LogViewer - Total %d logs, %d Error logs, %d Warning logs, takes %d seconds.", m_pLogList->GetItemCount(), 
-		(int)m_vecErrorLog.size(), (int)m_vecWarningLog.size(), (int)timeSpan.GetTotalSeconds());
+	strTitle.Format("LogViewer [%s] - Total %d logs, %d Error logs, %d Warning logs, takes %d seconds.", m_logConfig.strLogRoot,
+		m_pLogList->GetItemCount(), (int)m_vecErrorLog.size(), (int)m_vecWarningLog.size(), (int)timeSpan.GetTotalSeconds());
 	SetWindowText(strTitle);
 
 	m_bWorking = FALSE;
@@ -1780,6 +1785,7 @@ BOOL CLogViewerDlg::IsDirectory(const CString& path)
 
 void CLogViewerDlg::AddAllLogFilesInDir(const CString& directory)
 {
+	m_logConfig.strLogRoot = directory;
 	CFileFind finder;
 	CString searchPath = directory + L"\\*.log";
 
@@ -1791,14 +1797,13 @@ void CLogViewerDlg::AddAllLogFilesInDir(const CString& directory)
 
 		if (!finder.IsDots() && !finder.IsDirectory()) 
 		{
-			CString filePath = finder.GetFilePath();
 			CString fileName = finder.GetFileName();
 			regex  reg(_T("[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}.log"));
 			cmatch what;
 			if (regex_match(fileName.GetBuffer(0), what, reg))
 			{
 				int nPos = m_pLogFileList->InsertItem(m_pLogFileList->GetItemCount(), "");
-				m_pLogFileList->SetItemText(nPos, 1, filePath);
+				m_pLogFileList->SetItemText(nPos, 1, fileName);
 			}
 		}
 	}
