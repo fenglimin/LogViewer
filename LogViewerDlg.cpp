@@ -100,6 +100,7 @@ CLogViewerDlg::CLogViewerDlg(CWnd* pParent /*=NULL*/)
 	m_bPerformance = FALSE;
 	m_bStarting = TRUE;
 	m_bAllModuleSelected = TRUE;
+	m_bShowProcessAndThreadId = TRUE;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -502,6 +503,11 @@ void CLogViewerDlg::InsertLog(const LogDetail& logDetail)
 	{
 		m_nItemForLastSelectedRawLog = nItem;
 	}
+
+	if (!logDetail.strProcessId.IsEmpty())
+	{
+		m_bShowProcessAndThreadId = TRUE;
+	}
 }
 
 BOOL CLogViewerDlg::LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateSize)
@@ -711,7 +717,9 @@ void CLogViewerDlg::InitModuleList()
 	AddModule("59", "Multi Recordset", "GCPACS\\Src\\Server\\QRSCU\\MultiRecordSet", "MRS.vcxproj");
 	AddModule("65", "Framework", "GCPACS\\Src\\Client\\FRAMEWORK", "framework.vcxproj");
 	AddModule("66", "Audit Server", "GCPACS\\Src\\Server\\AuditServer", "AuditServer.vcxproj");
+	AddModule("71", "QC Client", "GCPACS\\Src\\Server\\QCClient", "QCClient.vcxproj");
 	AddModule("77", "MWL Server", "GCPACS\\Src\\Server\\MWL", "mwl.vcxproj");
+	AddModule("80", "Service Config", "GCPACS\\Src\\ServiceTools\\ServiceConfig\\Service_Cfg", "Service_Cfg.vcxproj");
 	AddModule("93", "Device Manager", "GCPACS\\Src\\Client\\DeviceManager\\DeviceManager", "DeviceManager.vcxproj");
 	AddModule("94", "Acq Panel", "GCPACS\\Src\\Client\\AcqPanel", "AcqPanel.vcxproj");
 	AddModule("601", "OptionService", "", "");
@@ -1104,7 +1112,7 @@ BOOL CLogViewerDlg::BeforeLoad()
 	UpdateData();
 
 	m_strLogContains.MakeUpper();
-
+	m_bShowProcessAndThreadId = FALSE;
 	m_pLogList->SetRedraw(FALSE);// LockWindowUpdate();
 
 
@@ -1160,6 +1168,23 @@ void CLogViewerDlg::AfterLoad()
 	}
 	else
 		ShowStatistics(0);
+
+	if (m_bShowProcessAndThreadId)
+	{
+		m_pLogList->SetColumnWidth(3, 50);
+		m_pLogList->SetColumnWidth(4, 50);
+	}
+	else
+	{
+		m_pLogList->SetColumnWidth(3, 0);
+		m_pLogList->SetColumnWidth(4, 0);
+
+		int nWidth = m_pLogList->GetColumnWidth(5);
+		if (nWidth == 580 )
+		{
+			m_pLogList->SetColumnWidth(5, nWidth+100);
+		}
+	}
 }
 
 void CLogViewerDlg::OnEnChangeEditSearch()

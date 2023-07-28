@@ -74,6 +74,7 @@ class CLogViewerDlg : public CDialog
 public:
 	CString		m_strCommandInput;
 	LogConfig	m_logConfig;
+int m_bShowProcessAndThreadId;
 
 int GetSelectedModules();
 	CString m_saModules[1000];
