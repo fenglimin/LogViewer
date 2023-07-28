@@ -643,9 +643,7 @@ BOOL CLogViewerDlg::FilterLog(const LogDetail& logDetail)
 
 	if (m_strLogContains != "")
 	{
-		CString strTemp = logDetail.strLogContent;
-		strTemp.MakeUpper();
-		if (strTemp.Find(m_strLogContains) == -1)
+		if (!FindNoCase(logDetail.strLogContent, m_strLogContains))
 			return FALSE;
 	}
 
@@ -675,13 +673,10 @@ BOOL CLogViewerDlg::CheckKeyWord(const CString& strContent)
 	if (m_vecFilterKeyword.size() == 0)
 		return TRUE;
 	
-	CString strTemp = strContent;
-	strTemp.MakeUpper();
 	for(int i = 0; i < m_vecFilterKeyword.size(); i++)
 	{
-		if (strTemp.Find(m_vecFilterKeyword[i]) != -1)
+		if (FindNoCase(strContent, m_vecFilterKeyword[i]))
 			return TRUE;
-
 	}
 	
 	return FALSE;
@@ -1111,7 +1106,6 @@ BOOL CLogViewerDlg::BeforeLoad()
 	m_pDlgWait->Show();
 	UpdateData();
 
-	m_strLogContains.MakeUpper();
 	m_bShowProcessAndThreadId = FALSE;
 	m_pLogList->SetRedraw(FALSE);// LockWindowUpdate();
 
@@ -1190,7 +1184,6 @@ void CLogViewerDlg::AfterLoad()
 void CLogViewerDlg::OnEnChangeEditSearch()
 {
 	GetDlgItemText(IDC_EDIT_SEARCH, m_strSearch);
-	m_strSearch.MakeUpper();
 	m_strSearch.Trim();
 
 	m_vecHitedLine.clear();
@@ -1200,7 +1193,7 @@ void CLogViewerDlg::OnEnChangeEditSearch()
 	{
 		BOOL bNeedRedraw;
 		LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(i);
-		if (!m_strSearch.IsEmpty() && m_pLogList->GetItemText(i, 5).MakeUpper().Find(m_strSearch) != -1)
+		if (!m_strSearch.IsEmpty() && FindNoCase(m_pLogList->GetItemText(i, 5), m_strSearch))
 		{
 			bNeedRedraw = !pLogStatus->bQueried;
 			pLogStatus->bQueried = TRUE;
@@ -1857,4 +1850,23 @@ void CLogViewerDlg::OnBnClickedCheckDipError()
 void CLogViewerDlg::OnBnClickedCheckWindowsMessage()
 {
 	OnButtonRefresh();
+}
+
+BOOL CLogViewerDlg::FindNoCase(const CString& strContent, const CString& strToken)
+{
+	try 
+	{
+		CString strNewContent = strContent;
+		CString strNewToken = strToken;
+
+		strNewContent.MakeUpper();
+		strNewToken.MakeUpper();
+		return strNewContent.Find(strNewToken) != -1;
+	}
+	catch (...) 
+	{
+		
+	}
+
+	return strContent.Find(strToken) != -1;
 }

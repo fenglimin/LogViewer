@@ -74,9 +74,9 @@ class CLogViewerDlg : public CDialog
 public:
 	CString		m_strCommandInput;
 	LogConfig	m_logConfig;
-int m_bShowProcessAndThreadId;
+	int m_bShowProcessAndThreadId;
 
-int GetSelectedModules();
+	int GetSelectedModules();
 	CString m_saModules[1000];
 
 	BOOL	m_bAllModuleSelected;
@@ -233,6 +233,7 @@ BOOL IsDirectory(const CString& path);
 void AddAllLogFilesInDir(const CString& directory);
 afx_msg void OnBnClickedCheckDipError();
 afx_msg void OnBnClickedCheckWindowsMessage();
+BOOL FindNoCase(const CString& strContent, const CString& strToken);
 };
 
 //{{AFX_INSERT_LOCATION}}
