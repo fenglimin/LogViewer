@@ -8,6 +8,7 @@
 #include <fstream>
 #include <afxtempl.h>
 #include "WaitDialog.h"
+#include <regex>
 
 using namespace std;
 
@@ -227,11 +228,31 @@ BOOL CLogViewerDlg::OnInitDialog()
 	OnButtonSelectAll();
 	m_pDlgWait = new CWaitDialog(this);
 
-	ShowAllLogFiles();
+	if (m_strCommandInput.IsEmpty())
+	{
+		ShowAllLogFiles();
+	}
+	else
+	{
+		GetDlgItem(IDC_CHECK_TODAY)->EnableWindow(FALSE);
+		GetDlgItem(IDC_CHECK_CURRENT_HOUR)->EnableWindow(FALSE);
+		if (IsDirectory(m_strCommandInput))
+		{
+			AddAllLogFilesInDir(m_strCommandInput);
+		}
+		else
+		{
+			int nPos = m_pLogFileList->InsertItem(0, "");
+			m_pLogFileList->SetItemText(nPos, 1, m_strCommandInput);
+		}
+	}
+	
 	OnBnClickedButtonSelectAllFile();
 	//AfxBeginThread(LoadCurrentHourThread, this);
 
 	m_bStarting = FALSE;
+
+	
 	OnBnClickedButtonReload();
 
 
@@ -985,8 +1006,19 @@ void CLogViewerDlg::OnBnClickedButtonReload()
 			continue;
 
 		CString strFileName = m_pLogFileList->GetItemText(i, 1);
-		CString strDate = strFileName.Left(10);
-		CString strFilePath = m_logConfig.strLogRoot + "\\" + strDate + "\\" + strFileName;
+		CString strDate, strFilePath;
+		if (m_strCommandInput.IsEmpty())
+		{
+			strDate = strFileName.Left(10);
+			strFilePath = m_logConfig.strLogRoot + "\\" + strDate + "\\" + strFileName;
+		}
+		else
+		{
+			strFilePath = strFileName;
+			strFileName = PathFindFileName(strFileName);
+			strDate = strFileName.Left(10);			
+		}
+		
 		LoadLogFile((LPTSTR)(LPCTSTR)strFilePath, strDate, bUpdateSize);
 		bUpdateSize = FALSE;
 	}
@@ -1732,4 +1764,44 @@ void CLogViewerDlg::OnNMRClickListFile(NMHDR *pNMHDR, LRESULT *pResult)
 	ShellExecute(NULL, "open", strFileName, NULL, NULL, SW_SHOW);
 	
 	*pResult = 0;
+}
+
+BOOL CLogViewerDlg::IsDirectory(const CString& path)
+{
+	CFileFind finder;
+	if (finder.FindFile(path)) 
+	{
+		finder.FindNextFile();
+		return finder.IsDirectory();
+	}
+	
+	return FALSE;
+}
+
+void CLogViewerDlg::AddAllLogFilesInDir(const CString& directory)
+{
+	CFileFind finder;
+	CString searchPath = directory + L"\\*.log";
+
+	BOOL bWorking = finder.FindFile(searchPath);
+
+	while (bWorking) 
+	{
+		bWorking = finder.FindNextFile();
+
+		if (!finder.IsDots() && !finder.IsDirectory()) 
+		{
+			CString filePath = finder.GetFilePath();
+			CString fileName = finder.GetFileName();
+			regex  reg(_T("[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}.log"));
+			cmatch what;
+			if (regex_match(fileName.GetBuffer(0), what, reg))
+			{
+				int nPos = m_pLogFileList->InsertItem(m_pLogFileList->GetItemCount(), "");
+				m_pLogFileList->SetItemText(nPos, 1, filePath);
+			}
+		}
+	}
+
+	finder.Close();
 }

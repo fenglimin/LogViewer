@@ -72,6 +72,7 @@ class CLogViewerDlg : public CDialog
 {
 // Construction
 public:
+	CString		m_strCommandInput;
 	LogConfig	m_logConfig;
 	int GetSelectedModules();
 	CString m_saModules[1000];
@@ -224,6 +225,8 @@ void OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult);
 	CString FindFileRecursive(const CString& directory, const CString& fileName);
 	afx_msg void OnNMRClickListLog(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMRClickListFile(NMHDR *pNMHDR, LRESULT *pResult);
+BOOL IsDirectory(const CString& path);
+void AddAllLogFilesInDir(const CString& directory);
 };
 
 //{{AFX_INSERT_LOCATION}}

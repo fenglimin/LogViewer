@@ -54,7 +54,27 @@ BOOL CLogViewerApp::InitInstance()
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
 
+	CRegKey partnerKey;
+	HKEY hKey;
+	CString subKey = L"Folder\\shell\\LogViewer\\command";
+	::RegCreateKeyEx(HKEY_CLASSES_ROOT, subKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
+
+	char szExePath[255];
+	::GetModuleFileName(NULL, szExePath, 255);
+	CString strValue;
+	strValue.Format("\"%s\" \"%%1\"", szExePath);
+	::RegSetValueEx(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(strValue.GetBuffer()), strValue.GetLength() * sizeof(TCHAR));
+
+	subKey = L"*\\shell\\LogViewer\\command";
+	::RegCreateKeyEx(HKEY_CLASSES_ROOT, subKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
+	::RegSetValueEx(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(strValue.GetBuffer()), strValue.GetLength() * sizeof(TCHAR));
+
+	CCommandLineInfo cmdInfo;
+	ParseCommandLine(cmdInfo);
+	
 	CLogViewerDlg dlg;
+	dlg.m_strCommandInput = cmdInfo.m_strFileName;
+	
 	m_pMainWnd = &dlg;
 	int nResponse = dlg.DoModal();
 	if (nResponse == IDOK)
