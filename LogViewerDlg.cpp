@@ -1167,7 +1167,7 @@ void CLogViewerDlg::AfterLoad()
 		ShowStatistics(m_nItemForLastSelectedRawLog);
 	}
 	else
-		ShowStatistics(0);
+		ShowStatistics(-1);
 
 	if (m_bShowProcessAndThreadId)
 	{
