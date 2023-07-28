@@ -92,7 +92,9 @@ CLogViewerDlg::CLogViewerDlg(CWnd* pParent /*=NULL*/)
 	m_bAcqEvents = FALSE;
 	m_bDipCom = FALSE;
 	m_bDipLog = FALSE;
+	m_bDipError = FALSE;
 	m_bDipBeamSenseCom = FALSE;
+	m_bWindowsMessage = FALSE;
 	m_bPocVita = FALSE;
 	m_bScannerState = FALSE;
 	m_bPerformance = FALSE;
@@ -132,7 +134,9 @@ void CLogViewerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_ACQ_EVENT, m_bAcqEvents);
 	DDX_Check(pDX, IDC_CHECK_DIP_COM, m_bDipCom);
 	DDX_Check(pDX, IDC_CHECK_DIP_LOG, m_bDipLog);
+	DDX_Check(pDX, IDC_CHECK_DIP_ERROR, m_bDipError);
 	DDX_Check(pDX, IDC_CHECK_DIP_BEAM_SENSE_COM, m_bDipBeamSenseCom);
+	DDX_Check(pDX, IDC_CHECK_WINDOWS_MESSAGE, m_bWindowsMessage);
 	DDX_Check(pDX, IDC_CHECK_POC_VITA, m_bPocVita);
 	DDX_Check(pDX, IDC_CHECK_SCANNER_STATE, m_bScannerState);
 	DDX_Check(pDX, IDC_CHECK_PERFORMANCE, m_bPerformance);
@@ -185,6 +189,8 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 //	ON_NOTIFY(NM_RDBLCLK, IDC_LIST_FILE, &CLogViewerDlg::OnNMRDblclkListFile)
 	ON_NOTIFY(NM_RCLICK, IDC_LIST_LOG, &CLogViewerDlg::OnNMRClickListLog)
 	ON_NOTIFY(NM_RCLICK, IDC_LIST_FILE, &CLogViewerDlg::OnNMRClickListFile)
+	ON_BN_CLICKED(IDC_CHECK_DIP_ERROR, &CLogViewerDlg::OnBnClickedCheckDipError)
+	ON_BN_CLICKED(IDC_CHECK_WINDOWS_MESSAGE, &CLogViewerDlg::OnBnClickedCheckWindowsMessage)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1115,15 +1121,19 @@ BOOL CLogViewerDlg::BeforeLoad()
 		m_vecFilterKeyword.push_back("[DIP COM]");
 	if (m_bDipLog)
 		m_vecFilterKeyword.push_back("[DIP LOG]");
+	if (m_bDipError)
+		m_vecFilterKeyword.push_back("[DIP Error]");
 	if (m_bDipBeamSenseCom)
 		m_vecFilterKeyword.push_back("[DIP  BEAM SENSE COM]");
+	if (m_bWindowsMessage)
+		m_vecFilterKeyword.push_back("[WINDOWSMESSAGE]");
 	if (m_bPocVita)
 		m_vecFilterKeyword.push_back("[POC VITA]");
 	if (m_bScannerState)
 		m_vecFilterKeyword.push_back("[SCANNER STATE]");
 	if (m_bPerformance)
 		m_vecFilterKeyword.push_back("PERFORMANCE");
-
+	
 	return TRUE;
 }
 
@@ -1661,6 +1671,8 @@ void CLogViewerDlg::OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult)
 			nID = IDC_EDIT_PROCESS_ID;
 		else if (pNMItemActivate->iSubItem == 4)
 			nID = IDC_EDIT_THREAD_ID;
+		else if (pNMItemActivate->iSubItem == 5)
+			nID = IDC_EDIT_LOG_CONTAINS;
 		else if (pNMItemActivate->iSubItem == 6)
 			nID = IDC_EDIT_ERROR_CODE;
 		else if (pNMItemActivate->iSubItem == 7)
@@ -1809,4 +1821,15 @@ void CLogViewerDlg::AddAllLogFilesInDir(const CString& directory)
 	}
 
 	finder.Close();
+}
+
+void CLogViewerDlg::OnBnClickedCheckDipError()
+{
+	OnButtonRefresh();
+}
+
+
+void CLogViewerDlg::OnBnClickedCheckWindowsMessage()
+{
+	OnButtonRefresh();
 }

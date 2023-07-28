@@ -34,7 +34,6 @@
 #define IDC_DATETIMEPICKER_END          1018
 #define ID_ACCEPT_RETURN                1019
 #define IDC_EDIT_RAW_LOG                1019
-#define IDC_EDIT_LOG_CONTAINS2          1020
 #define IDC_EDIT_LINE_NO                1020
 #define IDC_EDIT_SEARCH                 1021
 #define IDC_STATIC_SEARCH_RESULT        1022
@@ -59,6 +58,8 @@
 #define IDC_BUTTON_SELECT_NONE_FILE     1041
 #define IDC_STATIC_LOG_FILE             1043
 #define IDC_STATIC_LOG_GROUP            1044
+#define IDC_CHECK_DIP_ERROR             1048
+#define IDC_CHECK_WINDOWS_MESSAGE       1049
 
 // Next default values for new objects
 // 

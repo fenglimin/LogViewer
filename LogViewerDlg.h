@@ -74,7 +74,8 @@ class CLogViewerDlg : public CDialog
 public:
 	CString		m_strCommandInput;
 	LogConfig	m_logConfig;
-	int GetSelectedModules();
+
+int GetSelectedModules();
 	CString m_saModules[1000];
 
 	BOOL	m_bAllModuleSelected;
@@ -147,7 +148,9 @@ public:
 	BOOL	m_bAcqEvents;
 	BOOL	m_bDipCom;
 	BOOL	m_bDipLog;
+	BOOL	m_bDipError;
 	BOOL	m_bDipBeamSenseCom;
+	BOOL	m_bWindowsMessage;
 	BOOL	m_bPocVita;
 	BOOL	m_bScannerState;
 	BOOL	m_bPerformance;
@@ -227,6 +230,8 @@ void OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMRClickListFile(NMHDR *pNMHDR, LRESULT *pResult);
 BOOL IsDirectory(const CString& path);
 void AddAllLogFilesInDir(const CString& directory);
+afx_msg void OnBnClickedCheckDipError();
+afx_msg void OnBnClickedCheckWindowsMessage();
 };
 
 //{{AFX_INSERT_LOCATION}}
