@@ -192,6 +192,7 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_NOTIFY(NM_RCLICK, IDC_LIST_FILE, &CLogViewerDlg::OnNMRClickListFile)
 	ON_BN_CLICKED(IDC_CHECK_DIP_ERROR, &CLogViewerDlg::OnBnClickedCheckDipError)
 	ON_BN_CLICKED(IDC_CHECK_WINDOWS_MESSAGE, &CLogViewerDlg::OnBnClickedCheckWindowsMessage)
+	ON_NOTIFY(NM_CLICK, IDC_LIST_LOG, &CLogViewerDlg::OnNMClickListLog)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -414,7 +415,7 @@ BOOL CLogViewerDlg::LoadConfig()
 {
 	char	szConfigFile[128], szExePath[255];
 
-	char	Temp[128];
+	char	Temp[10240];
 
 	char *pDest;
 	::GetModuleFileName(NULL, szExePath, 255);
@@ -424,17 +425,46 @@ BOOL CLogViewerDlg::LoadConfig()
 	strcpy(szConfigFile, szExePath);
 	strcat(szConfigFile, "LogViewer.ini");
 
-	GetPrivateProfileString("Setting", "LogRoot", "C:\\Image Suite\\Log", (char*)Temp, 128, szConfigFile);
+	GetPrivateProfileString("Setting", "LogRoot", "C:\\Image Suite\\Log", (char*)Temp, 10240, szConfigFile);
 	m_logConfig.strLogRoot = Temp;
 
-	GetPrivateProfileString("Setting", "SourceRoot", "D:\\Work\\Git\\ImageSuite", (char*)Temp, 128, szConfigFile);
+	GetPrivateProfileString("Setting", "SourceRoot", "D:\\Work\\Git\\ImageSuite", (char*)Temp, 10240, szConfigFile);
 	m_logConfig.strSourceRoot = Temp;
 
-	GetPrivateProfileString("Setting", "NotePad++", "D:\\Work\\GreenTools\\NotePad++\\NotePad++.EXE", (char*)Temp, 128, szConfigFile);
+	GetPrivateProfileString("Setting", "NotePad++", "D:\\Work\\GreenTools\\NotePad++\\NotePad++.EXE", (char*)Temp, 10240, szConfigFile);
 	m_logConfig.strNotepadPathName = Temp;
 
-	GetPrivateProfileString("Setting", "IgnoreMR9RepeatedLog", "1", (char*)Temp, 128, szConfigFile);
+	GetPrivateProfileString("Setting", "IgnoreMR9RepeatedLog", "1", (char*)Temp, 10240, szConfigFile);
 	m_logConfig.bIgnoreKnownRepeatedLog = Temp[0] == '1';
+
+	CString strKey, strTokenStart, strTokenEnd;
+	int nCount = GetPrivateProfileInt("EnumToString", "Count", 0, szConfigFile);
+	for (int i = 1; i <= nCount; i++)
+	{
+		EnumToString enumToString;
+		strKey.Format("Item%d_TokenStart", i);
+		GetPrivateProfileString("EnumToString", strKey, "", (char*)Temp, 10240, szConfigFile);
+		enumToString.strTokenStart = Temp;
+
+		strKey.Format("Item%d_TokenEnd", i);
+		GetPrivateProfileString("EnumToString", strKey, "", (char*)Temp, 10240, szConfigFile);
+		enumToString.strTokenEnd = Temp;
+
+		strKey.Format("Item%d_EnumToString", i);
+		GetPrivateProfileString("EnumToString", strKey, "", (char*)Temp, 10240, szConfigFile);
+		CStringEx strValue(Temp);
+
+		int nTokenCount = strValue.GetFieldCount(",");
+		for (int j = 0; j < nTokenCount; j++)
+		{
+			CStringEx s = strValue.GetField(",", j);
+			int index = s.GetField(":", 1).AsInt();
+			enumToString.arrayToken[index] = s.GetField(":", 0);
+		}
+
+		m_logConfig.vecEnumToString.push_back(enumToString);
+	}
+
 	
 	return TRUE;
 }
@@ -1888,4 +1918,57 @@ int CLogViewerDlg::GetTotalRawLogCount()
 	}
 
 	return nCount;
+}
+
+void CLogViewerDlg::OnNMClickListLog(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+
+	LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(pNMItemActivate->iItem);
+	LogDetail logDetail = m_vecLogFile[pLogStatus->nLogFileIndex].vecLog[pLogStatus->nLogContentIndex];
+
+	regex reg("^[-+]?\\d+$"); // Regular expression for integer: optional sign, followed by digits
+	cmatch what;
+	
+	CStringEx strContent = logDetail.strLogContent;
+	
+	for (int i = 0; i < m_logConfig.vecEnumToString.size(); i++)
+	{
+		if (m_logConfig.vecEnumToString[i].strTokenEnd.IsEmpty())
+		{
+			int nCount = strContent.GetFieldCount(m_logConfig.vecEnumToString[i].strTokenStart);
+			if (nCount > 0)
+			{
+				CStringEx strTemp = strContent.GetField(m_logConfig.vecEnumToString[i].strTokenStart, 1);
+				CString strOld = m_logConfig.vecEnumToString[i].strTokenStart + strTemp;
+				strTemp.Trim();
+
+				if (!regex_match(strTemp.GetBuffer(0), what, reg))
+					break;
+
+				CString strValue = m_logConfig.vecEnumToString[i].arrayToken[strTemp.AsInt()];
+				m_vecLogFile[pLogStatus->nLogFileIndex].vecLog[pLogStatus->nLogContentIndex].strLogContent.Replace(strOld,
+					m_logConfig.vecEnumToString[i].strTokenStart + " " + strValue);
+				m_pLogList->SetItemText(pNMItemActivate->iItem, 5, m_vecLogFile[pLogStatus->nLogFileIndex].vecLog[pLogStatus->nLogContentIndex].strLogContent);
+				break;
+			}
+		}
+		else
+		{
+			int nCount = strContent.GetDelimitedFieldCount(m_logConfig.vecEnumToString[i].strTokenStart, m_logConfig.vecEnumToString[i].strTokenEnd);
+			if (nCount > 0)
+			{
+				CStringEx strTemp = strContent.GetDelimitedField(m_logConfig.vecEnumToString[i].strTokenStart, m_logConfig.vecEnumToString[i].strTokenEnd, 0);
+				CString strOld = m_logConfig.vecEnumToString[i].strTokenStart + strTemp + m_logConfig.vecEnumToString[i].strTokenEnd;
+				strTemp.Trim();
+				CString strValue = m_logConfig.vecEnumToString[i].arrayToken[strTemp.AsInt()];
+
+				m_vecLogFile[pLogStatus->nLogFileIndex].vecLog[pLogStatus->nLogContentIndex].strLogContent.Replace(strOld,
+					m_logConfig.vecEnumToString[i].strTokenStart + " " + strValue + m_logConfig.vecEnumToString[i].strTokenEnd);
+				m_pLogList->SetItemText(pNMItemActivate->iItem, 5, m_vecLogFile[pLogStatus->nLogFileIndex].vecLog[pLogStatus->nLogContentIndex].strLogContent);
+			}
+		}
+	}
+	
+	*pResult = 0;
 }

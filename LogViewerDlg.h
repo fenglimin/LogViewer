@@ -13,6 +13,13 @@
 /////////////////////////////////////////////////////////////////////////////
 // CLogViewerDlg dialog
 
+struct EnumToString
+{
+	CString strTokenStart;
+	CString strTokenEnd;
+	CString arrayToken[100];
+};
+
 struct LogConfig
 {
 	CString strLogRoot;
@@ -20,6 +27,8 @@ struct LogConfig
 	CString strNotepadPathName;
 
 	BOOL bIgnoreKnownRepeatedLog;
+
+	std::vector<EnumToString> vecEnumToString;
 };
 
 struct ModuleDetail
@@ -237,6 +246,7 @@ void AddAllLogFilesInDir(const CString& directory);
 afx_msg void OnBnClickedCheckDipError();
 afx_msg void OnBnClickedCheckWindowsMessage();
 BOOL FindNoCase(const CString& strContent, const CString& strToken);
+afx_msg void OnNMClickListLog(NMHDR *pNMHDR, LRESULT *pResult);
 };
 
 //{{AFX_INSERT_LOCATION}}

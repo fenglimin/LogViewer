@@ -193,7 +193,7 @@ int CStringEx::GetDelimitedFieldCount(LPCTSTR DelimStart, LPCTSTR DelimEnd)
 	int LenDelimStart = lstrlen( DelimStart ), LenDelimEnd = lstrlen( DelimEnd );
 	int nCount = 0;
 
-	while( lpsz && lpszEnd )
+	do
 	{
 		lpsz = _tcsstr ( lpszRemainder, DelimStart);
 		if ( lpsz )
@@ -206,18 +206,18 @@ int CStringEx::GetDelimitedFieldCount(LPCTSTR DelimStart, LPCTSTR DelimEnd)
 				nCount ++;
 			}
 		}
-	}
+	} while (lpsz && lpszEnd);
 
 	return nCount;
 }
 
 int CStringEx::GetFieldCount(LPCTSTR Delim)
 {
-	LPTSTR lpsz, lpszRemainder = GetBuffer(0) ;
+	LPTSTR lpsz = NULL, lpszRemainder = GetBuffer(0) ;
 	int LenDelim = lstrlen( Delim );
 	int nCount = 0;
 
-	while( lpsz )
+	do
 	{
 		lpsz = _tcsstr ( lpszRemainder, Delim);
 		if ( lpsz )
@@ -225,8 +225,8 @@ int CStringEx::GetFieldCount(LPCTSTR Delim)
 			lpszRemainder = lpsz + LenDelim;
 			nCount ++;
 		}
-	}
-
+	} while (lpsz);
+	
 	return nCount;
 }
 
