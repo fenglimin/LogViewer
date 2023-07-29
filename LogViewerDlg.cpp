@@ -455,7 +455,7 @@ BOOL CLogViewerDlg::LoadConfig()
 		CStringEx strValue(Temp);
 
 		int nTokenCount = strValue.GetFieldCount(",");
-		for (int j = 0; j < nTokenCount; j++)
+		for (int j = 0; j <= nTokenCount; j++)
 		{
 			CStringEx s = strValue.GetField(",", j);
 			int index = s.GetField(":", 1).AsInt();
@@ -1162,7 +1162,7 @@ BOOL CLogViewerDlg::BeforeLoad()
 	if (m_bDipError)
 		m_vecFilterKeyword.push_back("[DIP Error]");
 	if (m_bDipBeamSenseCom)
-		m_vecFilterKeyword.push_back("[DIP  BEAM SENSE COM]");
+		m_vecFilterKeyword.push_back("[DIP BEAM SENSE COM]");
 	if (m_bWindowsMessage)
 		m_vecFilterKeyword.push_back("[WINDOWSMESSAGE]");
 	if (m_bPocVita)
@@ -1931,7 +1931,9 @@ void CLogViewerDlg::OnNMClickListLog(NMHDR *pNMHDR, LRESULT *pResult)
 	cmatch what;
 	
 	CStringEx strContent = logDetail.strLogContent;
-	
+	CStringEx strToken;
+	CString strAdd;
+	BOOL bFind = FALSE;
 	for (int i = 0; i < m_logConfig.vecEnumToString.size(); i++)
 	{
 		if (m_logConfig.vecEnumToString[i].strTokenEnd.IsEmpty())
@@ -1939,34 +1941,40 @@ void CLogViewerDlg::OnNMClickListLog(NMHDR *pNMHDR, LRESULT *pResult)
 			int nCount = strContent.GetFieldCount(m_logConfig.vecEnumToString[i].strTokenStart);
 			if (nCount > 0)
 			{
-				CStringEx strTemp = strContent.GetField(m_logConfig.vecEnumToString[i].strTokenStart, 1);
-				CString strOld = m_logConfig.vecEnumToString[i].strTokenStart + strTemp;
-				strTemp.Trim();
-
-				if (!regex_match(strTemp.GetBuffer(0), what, reg))
-					break;
-
-				CString strValue = m_logConfig.vecEnumToString[i].arrayToken[strTemp.AsInt()];
-				m_vecLogFile[pLogStatus->nLogFileIndex].vecLog[pLogStatus->nLogContentIndex].strLogContent.Replace(strOld,
-					m_logConfig.vecEnumToString[i].strTokenStart + " " + strValue);
-				m_pLogList->SetItemText(pNMItemActivate->iItem, 5, m_vecLogFile[pLogStatus->nLogFileIndex].vecLog[pLogStatus->nLogContentIndex].strLogContent);
-				break;
+				strToken = strContent.GetField(m_logConfig.vecEnumToString[i].strTokenStart, 1);
+				bFind = TRUE;
 			}
 		}
 		else
 		{
+			if (m_logConfig.vecEnumToString[i].strTokenEnd != ".")
+				strAdd = " ";
+			
 			int nCount = strContent.GetDelimitedFieldCount(m_logConfig.vecEnumToString[i].strTokenStart, m_logConfig.vecEnumToString[i].strTokenEnd);
 			if (nCount > 0)
 			{
-				CStringEx strTemp = strContent.GetDelimitedField(m_logConfig.vecEnumToString[i].strTokenStart, m_logConfig.vecEnumToString[i].strTokenEnd, 0);
-				CString strOld = m_logConfig.vecEnumToString[i].strTokenStart + strTemp + m_logConfig.vecEnumToString[i].strTokenEnd;
-				strTemp.Trim();
-				CString strValue = m_logConfig.vecEnumToString[i].arrayToken[strTemp.AsInt()];
-
-				m_vecLogFile[pLogStatus->nLogFileIndex].vecLog[pLogStatus->nLogContentIndex].strLogContent.Replace(strOld,
-					m_logConfig.vecEnumToString[i].strTokenStart + " " + strValue + m_logConfig.vecEnumToString[i].strTokenEnd);
-				m_pLogList->SetItemText(pNMItemActivate->iItem, 5, m_vecLogFile[pLogStatus->nLogFileIndex].vecLog[pLogStatus->nLogContentIndex].strLogContent);
+				strToken = strContent.GetDelimitedField(m_logConfig.vecEnumToString[i].strTokenStart, m_logConfig.vecEnumToString[i].strTokenEnd, 0);
+				bFind = TRUE;
 			}
+		}
+
+		if (bFind)
+		{
+			CString strOld = m_logConfig.vecEnumToString[i].strTokenStart + strToken + m_logConfig.vecEnumToString[i].strTokenEnd;
+			strToken.Trim();
+
+			if (!regex_match(strToken.GetBuffer(0), what, reg))
+				break;
+
+			int nIndex = strToken.AsInt();
+			if (nIndex < 0)
+				nIndex = -nIndex;
+			
+			CString strValue = m_logConfig.vecEnumToString[i].arrayToken[nIndex];
+			m_vecLogFile[pLogStatus->nLogFileIndex].vecLog[pLogStatus->nLogContentIndex].strLogContent.Replace(strOld,
+				m_logConfig.vecEnumToString[i].strTokenStart + " " + strValue + strAdd + m_logConfig.vecEnumToString[i].strTokenEnd);
+			m_pLogList->SetItemText(pNMItemActivate->iItem, 5, m_vecLogFile[pLogStatus->nLogFileIndex].vecLog[pLogStatus->nLogContentIndex].strLogContent);
+			break;
 		}
 	}
 	
