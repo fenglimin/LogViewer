@@ -250,9 +250,8 @@ BOOL CLogViewerDlg::OnInitDialog()
 			::PathRemoveFileSpec(path);
 			
 			m_logConfig.strLogRoot = path;
-			
-			int nPos = m_pLogFileList->InsertItem(0, "");
-			m_pLogFileList->SetItemText(nPos, 1, PathFindFileName(m_strCommandInput));
+
+			AddLogFile(m_strCommandInput, PathFindFileName(m_strCommandInput));
 		}
 	}
 	
@@ -726,7 +725,7 @@ void CLogViewerDlg::InitModuleList()
 
 	m_pModuleList->InsertColumn(0, " ", LVCFMT_LEFT, 20);
 	m_pModuleList->InsertColumn(1, "No", LVCFMT_LEFT, 30);
-	m_pModuleList->InsertColumn(2, "Name", LVCFMT_LEFT, 120);
+	m_pModuleList->InsertColumn(2, "Name", LVCFMT_LEFT, 150);
 
 	AddModule("0", "MiniPacsWeb", "", "");
 	AddModule("1", "MiniPacsHost", "WebPacs", "");
@@ -876,10 +875,9 @@ void CLogViewerDlg::AddModule(const CString& strModuleId, const CString& strModu
 	m_pModuleList->SetItemText(nPos, 2, strModuleName);
 }
 
-void CLogViewerDlg::AddLogFile(const CString& strLogFileName)
+void CLogViewerDlg::AddLogFile(const CString& strLogFileFullName, const CString& strLogFileName)
 {
-	CString strLogFile = m_logConfig.strLogRoot + "\\" + strLogFileName.Left(10) + "\\" + strLogFileName;
-	ifstream ifs(strLogFile);
+	ifstream ifs(strLogFileFullName);
 	if (!ifs.good())
 	{
 		return;
@@ -901,7 +899,9 @@ void CLogViewerDlg::LoadDayLog(CString strDate, BOOL bUpdateSize)
 	if ( m_bCurrentHour )
 	{
 		CString strHour = m_dtNow.Format("%H");
-		AddLogFile(strDate + "-" + strHour + ".log");
+		CString strLogFileName = strDate + "-" + strHour + ".log";
+		CString strLogFileFullName = m_logConfig.strLogRoot + "\\" + strLogFileName.Left(10) + "\\" + strLogFileName;
+		AddLogFile(strLogFileFullName, strLogFileName);
 	}
 	else
 	{
@@ -913,7 +913,9 @@ void CLogViewerDlg::LoadDayLog(CString strDate, BOOL bUpdateSize)
 			else
 				strHour.Format("%d", i );
 
-			AddLogFile(strDate + "-" + strHour + ".log");
+			CString strLogFileName = strDate + "-" + strHour + ".log";
+			CString strLogFileFullName = m_logConfig.strLogRoot + "\\" + strLogFileName.Left(10) + "\\" + strLogFileName;
+			AddLogFile(strLogFileFullName, strLogFileName);
 		}
 	}
 }
@@ -1834,7 +1836,8 @@ void CLogViewerDlg::OnNMRClickListFile(NMHDR *pNMHDR, LRESULT *pResult)
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 
 	CString strFileName = m_pLogFileList->GetItemText(pNMItemActivate->iItem, 1);
-	strFileName = m_logConfig.strLogRoot + "\\" + strFileName.Left(10) + "\\" + strFileName;
+	CString strDir = m_logConfig.strLogRoot + "\\" + (m_strCommandInput.IsEmpty() ? strFileName.Left(10) + "\\" : "");
+	strFileName = strDir + strFileName;
 	ShellExecute(NULL, "open", strFileName, NULL, NULL, SW_SHOW);
 	
 	*pResult = 0;
@@ -1871,8 +1874,7 @@ void CLogViewerDlg::AddAllLogFilesInDir(const CString& directory)
 			cmatch what;
 			if (regex_match(fileName.GetBuffer(0), what, reg))
 			{
-				int nPos = m_pLogFileList->InsertItem(m_pLogFileList->GetItemCount(), "");
-				m_pLogFileList->SetItemText(nPos, 1, fileName);
+				AddLogFile(directory + "\\" + fileName, fileName);
 			}
 		}
 	}

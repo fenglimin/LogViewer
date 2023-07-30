@@ -242,7 +242,7 @@ public:
 	BOOL	FilterLog(const LogDetail& logDetail);
 	void	SetRawLogContent(int nItem);
 	BOOL	CheckKeyWord(const CString& strContent);
-	void	AddLogFile(const CString& strLogFileName);
+	void	AddLogFile(const CString& strLogFileFullName, const CString& strLogFileName);
 	void	InitLogFileList();
 	void	ShowAllLogFiles();
 	int		GetSelectedModules();
