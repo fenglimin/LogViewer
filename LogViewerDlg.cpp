@@ -487,7 +487,7 @@ void CLogViewerDlg::InitLogList()
 	m_pLogList->InsertColumn(nCol++, "ModuleName", LVCFMT_LEFT, 100);
 	m_pLogList->InsertColumn(nCol++, "PID", LVCFMT_LEFT, 50);
 	m_pLogList->InsertColumn(nCol++, "TID", LVCFMT_LEFT, 50);
-	m_pLogList->InsertColumn(nCol++, "Log Content", LVCFMT_LEFT, 500);
+	m_pLogList->InsertColumn(nCol++, "Log Content", LVCFMT_LEFT, 480);
 	m_pLogList->InsertColumn(nCol++, "Code", LVCFMT_LEFT, 50);
 	m_pLogList->InsertColumn(nCol++, "File", LVCFMT_LEFT, 130);
 	m_pLogList->InsertColumn(nCol++, "LineNo", LVCFMT_LEFT, 50);
@@ -763,7 +763,8 @@ void CLogViewerDlg::InitLogFileList()
 	m_pLogFileList->SetExtendedStyle(dwStyle);
 
 	m_pLogFileList->InsertColumn(0, " ", LVCFMT_LEFT, 20);
-	m_pLogFileList->InsertColumn(1, "Name", LVCFMT_LEFT, 150);
+	m_pLogFileList->InsertColumn(1, "Name", LVCFMT_LEFT, 120);
+	m_pLogFileList->InsertColumn(2, "Size(k)", LVCFMT_RIGHT, 60);
 }
 
 void CLogViewerDlg::OnCheckToday() 
@@ -888,10 +889,11 @@ void CLogViewerDlg::AddLogFile(const CString& strLogFileName)
 	std::streampos fileSize = ifs.tellg();
 	ifs.close();
 
-	int i = (int)fileSize;
+	CStringEx strSize((int)(fileSize/1024));
 	
 	int nPos = m_pLogFileList->InsertItem(m_pLogFileList->GetItemCount(), "");
 	m_pLogFileList->SetItemText(nPos, 1, strLogFileName);
+	m_pLogFileList->SetItemText(nPos, 2, strSize);
 }
 
 void CLogViewerDlg::LoadDayLog(CString strDate, BOOL bUpdateSize)
