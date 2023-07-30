@@ -82,40 +82,27 @@ class CLogViewerDlg : public CDialog
 {
 // Construction
 public:
-	int		m_arrayLogCount[5];
-	
 	CString		m_strCommandInput;
-	LogConfig	m_logConfig;
-	int m_bShowProcessAndThreadId;
-
-	int GetSelectedModules();
-	CString m_saModules[1000];
-
-	BOOL	m_bAllModuleSelected;
-	int		m_nSeverity;
-	COleDateTime m_dtNow;
-	void LoadDayLog(CString strDate, BOOL bUpdateSize);
-	BOOL LoadConfig();
-	void AddModule(const CString& strModuleId, const CString& strModuleName, const CString& strProjectDir = "", const CString& strProjectFile = "");
-	BOOL BeforeLoad();
-	int		GetTotalRawLogCount();
-	void AfterLoad();
 	
-	void EnableHourControl(BOOL bEnable);
-	void EnableDateControl(BOOL bEnable);
-	void InitFilter();
-	void InitModuleList();
-	BOOL LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateSize);
-	void ProcessLog(const LogDetail & logDetail);
-	void InsertLog(const LogDetail& logDetail);
+private:
+	int			m_arrayLogCount[5];
+	LogConfig	m_logConfig;
+	int			m_bShowProcessAndThreadId;
+	CString		m_saModules[1000];
+	BOOL		m_bAllModuleSelected;
+	int			m_nSeverity;
 	CImageList	m_ImageListSmall, m_ImageListNormal;
 	CListCtrl*	m_pLogList;
 	CListCtrl*	m_pModuleList;
 	CListCtrl*	m_pLogFileList;
-	void InitLogList();
-	CLogViewerDlg(CWnd* pParent = NULL);	// standard constructor
-	~CLogViewerDlg();
-	void CenterLogItem(int nItem);
+	int			m_nCurrentHighlightedItemIndex;
+	int			m_nCurrentErrorItemIndex;
+	int			m_nCurrentWarningItemIndex;
+	BOOL		m_bStarting;
+	int			m_nLogFileCount;
+	int			m_nEnsureVisibleItem;
+	CRect		m_rectClient;
+
 	
 	std::vector<ModuleDetail> m_vecModule;
 	std::vector<CString> m_vecFilterKeyword;
@@ -123,65 +110,49 @@ public:
 	std::vector<int> m_vecHitedLine;
 	std::vector<int> m_vecErrorLog;
 	std::vector<int> m_vecWarningLog;
-	int		m_nCurrentHighlightedItemIndex;
-	int		m_nCurrentErrorItemIndex;
-	int		m_nCurrentWarningItemIndex;
-	int FindLastVisibleItem(const std::vector<int>& vecData);
-	
-	BOOL FilterLog(const LogDetail& logDetail);
-	void SetRawLogContent(int nItem);
-	CWaitDialog* m_pDlgWait;
-	BOOL CheckKeyWord(const CString& strContent);
-	void AddLogFile(const CString& strLogFileName);
-	void InitLogFileList();
-	void ShowAllLogFiles();
+	COleDateTime	m_dtNow;
+	CWaitDialog*	m_pDlgWait;
+
 // Dialog Data
 	//{{AFX_DATA(CLogViewerDlg)
 	enum { IDD = IDD_LOGVIEWER_DIALOG };
-	CComboBox	m_comboLogSeverity;
+	CComboBox		m_comboLogSeverity;
 	CSpinButtonCtrl	m_spinStartHour;
 	CSpinButtonCtrl	m_spinEndHour;
 	COleDateTime	m_tEndDay;
 	COleDateTime	m_tStartDay;
-	CString	m_strErrorCode;
-	CString	m_strLogContains;
-	CString	m_strProcessId;
-	CString	m_strThreadId;
-	CString	m_strSourceFile;
-	CString	m_strLineNo;
-	BOOL	m_bCurrentHour;
-	BOOL	m_bToday;
-	int		m_nEndHour;
-	int		m_nStartHour;
-	CString m_strSearch;
-	CString	m_strLastSelectedRawLog;
-	int		m_nItemForLastSelectedRawLog;
-	BOOL	m_bWorking;
-	BOOL	m_bLatestConsoleStartupOnly;
-	BOOL	m_bUserActions;
-	BOOL	m_bAcqEvents;
-	BOOL	m_bDipCom;
-	BOOL	m_bDipLog;
-	BOOL	m_bDipError;
-	BOOL	m_bDipBeamSenseCom;
-	BOOL	m_bWindowsMessage;
-	BOOL	m_bPocVita;
-	BOOL	m_bScannerState;
-	BOOL	m_bPerformance;
-
-	BOOL	m_bStarting;
-	int		m_nLogFileCount;
-
-	int		m_nEnsureVisibleItem;
-
-	void	ShowLogFileCount();
-	BOOL	IsLogItemVisible(int nItem);
+	CString			m_strErrorCode;
+	CString			m_strLogContains;
+	CString			m_strProcessId;
+	CString			m_strThreadId;
+	CString			m_strSourceFile;
+	CString			m_strLineNo;
+	BOOL			m_bCurrentHour;
+	BOOL			m_bToday;
+	int				m_nEndHour;
+	int				m_nStartHour;
+	CString			m_strSearch;
+	CString			m_strLastSelectedRawLog;
+	int				m_nItemForLastSelectedRawLog;
+	BOOL			m_bWorking;
+	BOOL			m_bLatestConsoleStartupOnly;
+	BOOL			m_bUserActions;
+	BOOL			m_bAcqEvents;
+	BOOL			m_bDipCom;
+	BOOL			m_bDipLog;
+	BOOL			m_bDipError;
+	BOOL			m_bDipBeamSenseCom;
+	BOOL			m_bWindowsMessage;
+	BOOL			m_bPocVita;
+	BOOL			m_bScannerState;
+	BOOL			m_bPerformance;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CLogViewerDlg)
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -201,19 +172,6 @@ protected:
 	afx_msg void OnButtonSelectNone();
 	afx_msg void OnItemClickModuleList(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnCustomDrawListCtrl(NMHDR* pNMHDR, LRESULT* pResult);
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
-public:
-	void VisibleKeyLog(int& nCurrentIndex, std::vector<int>& vecData, BOOL bCtrlPressed, BOOL bShiftPressed);
-	void ShowStatistics(int nItem);
-	void FilterLatestConsoleStartup();
-	void CleanMemory();
-	void OnBnClickedButtonReload();
-	afx_msg void OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult);
-	void OnReturnPressed(BOOL bCtrlPressed, BOOL bShiftPressed);
-	virtual BOOL PreTranslateMessage(MSG* pMsg);
-	void ChangeHighlightedItem(int nNewItem);
-	void OnEnChangeEditSearch();
 	afx_msg void OnBnClickedButtonHighlightFirst();
 	afx_msg void OnBnClickedButtonHighlightPrev();
 	afx_msg void OnBnClickedButtonHighlightNext();
@@ -235,24 +193,59 @@ public:
 	afx_msg void OnEnChangeEditEndHour();
 	afx_msg void OnBnClickedButtonSelectNoneFile();
 	afx_msg void OnNMClickListFile(NMHDR *pNMHDR, LRESULT *pResult);
-	CString FindSourceFilePath(const CString& strModuleId, const CString& strSourceFileName);
-void OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult);
-//	afx_msg void OnNMDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult);
-//	afx_msg void OnNMRDblclkListFile(NMHDR *pNMHDR, LRESULT *pResult);
-	CString FindFileRecursive(const CString& directory, const CString& fileName);
+	afx_msg void OnLvnItemchangedListLog(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMRClickListLog(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMRClickListFile(NMHDR *pNMHDR, LRESULT *pResult);
-BOOL IsDirectory(const CString& path);
-void AddAllLogFilesInDir(const CString& directory);
-afx_msg void OnBnClickedCheckDipError();
-afx_msg void OnBnClickedCheckWindowsMessage();
-BOOL FindNoCase(const CString& strContent, const CString& strToken);
-afx_msg void OnNMClickListLog(NMHDR *pNMHDR, LRESULT *pResult);
-afx_msg void MoveControl(int nWidthDiff, int nHeightDiff, int nID, BOOL bMoveLeft, BOOL bMoveTop, BOOL bChangeHeight, BOOL bChangeWidth);
-//void OnSizing(UINT fwSide, LPRECT pRect);
-afx_msg void OnSize(UINT nType, int cx, int cy);
-
-	CRect m_rectClient;
+	afx_msg void OnBnClickedCheckDipError();
+	afx_msg void OnBnClickedCheckWindowsMessage();
+	afx_msg void OnNMClickListLog(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnBnClickedButtonReload();
+	afx_msg void OnEnChangeEditSearch();
+	afx_msg void OnNMDblclkListLog(NMHDR *pNMHDR, LRESULT *pResult);
+	//}}AFX_MSG
+	DECLARE_MESSAGE_MAP()
+public:
+	CLogViewerDlg(CWnd* pParent = NULL);	// standard constructor
+	~CLogViewerDlg();
+	
+	void	CenterLogItem(int nItem);
+	void	InitLogList();
+	BOOL	FindNoCase(const CString& strContent, const CString& strToken);
+	void	MoveControl(int nWidthDiff, int nHeightDiff, int nID, BOOL bMoveLeft, BOOL bMoveTop, BOOL bChangeHeight, BOOL bChangeWidth);
+	void	VisibleKeyLog(int& nCurrentIndex, std::vector<int>& vecData, BOOL bCtrlPressed, BOOL bShiftPressed);
+	void	ShowStatistics(int nItem);
+	void	FilterLatestConsoleStartup();
+	void	CleanMemory();
+	void	OnReturnPressed(BOOL bCtrlPressed, BOOL bShiftPressed);
+	void	ChangeHighlightedItem(int nNewItem);
+	CString FindSourceFilePath(const CString& strModuleId, const CString& strSourceFileName);
+	CString FindFileRecursive(const CString& directory, const CString& fileName);
+	BOOL	IsDirectory(const CString& path);
+	void	AddAllLogFilesInDir(const CString& directory);
+	void	ShowLogFileCount();
+	BOOL	IsLogItemVisible(int nItem);
+	void	LoadDayLog(CString strDate, BOOL bUpdateSize);
+	BOOL	LoadConfig();
+	void	AddModule(const CString& strModuleId, const CString& strModuleName, const CString& strProjectDir = "", const CString& strProjectFile = "");
+	BOOL	BeforeLoad();
+	int		GetTotalRawLogCount();
+	void	AfterLoad();
+	void	EnableHourControl(BOOL bEnable);
+	void	EnableDateControl(BOOL bEnable);
+	void	InitFilter();
+	void	InitModuleList();
+	BOOL	LoadLogFile(char* strLogFile, CString strDate, BOOL bUpdateSize);
+	void	ProcessLog(const LogDetail & logDetail);
+	void	InsertLog(const LogDetail& logDetail);
+	int		FindLastVisibleItem(const std::vector<int>& vecData);
+	BOOL	FilterLog(const LogDetail& logDetail);
+	void	SetRawLogContent(int nItem);
+	BOOL	CheckKeyWord(const CString& strContent);
+	void	AddLogFile(const CString& strLogFileName);
+	void	InitLogFileList();
+	void	ShowAllLogFiles();
+	int		GetSelectedModules();
 };
 
 //{{AFX_INSERT_LOCATION}}

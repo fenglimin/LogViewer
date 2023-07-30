@@ -18,13 +18,6 @@ using namespace std;
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static UINT LoadCurrentHourThread(LPVOID pParam)
-{
-	CLogViewerDlg* pParent = static_cast<CLogViewerDlg*>(pParam);
-	pParent->OnBnClickedButtonReload();
-	return 0;
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // CAboutDlg dialog used for App About
 
