@@ -58,6 +58,8 @@
 #define IDC_BUTTON_SELECT_NONE_FILE     1041
 #define IDC_STATIC_LOG_FILE             1043
 #define IDC_STATIC_LOG_GROUP            1044
+#define IDC_STATIC_KEYWORD_GROUP        1045
+#define IDC_STATIC_FILTER_GROUP         1046
 #define IDC_CHECK_DIP_ERROR             1048
 #define IDC_CHECK_WINDOWS_MESSAGE       1049
 
@@ -67,7 +69,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        139
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1045
+#define _APS_NEXT_CONTROL_VALUE         1047
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -193,6 +193,8 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHECK_DIP_ERROR, &CLogViewerDlg::OnBnClickedCheckDipError)
 	ON_BN_CLICKED(IDC_CHECK_WINDOWS_MESSAGE, &CLogViewerDlg::OnBnClickedCheckWindowsMessage)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_LOG, &CLogViewerDlg::OnNMClickListLog)
+//	ON_WM_SIZING()
+	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -269,7 +271,11 @@ BOOL CLogViewerDlg::OnInitDialog()
 	
 	OnBnClickedButtonReload();
 
-
+	if (m_logConfig.nShowMaximize)
+	{
+		ShowWindow(SW_MAXIMIZE);
+	}
+	
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -437,6 +443,9 @@ BOOL CLogViewerDlg::LoadConfig()
 	GetPrivateProfileString("Setting", "IgnoreMR9RepeatedLog", "1", (char*)Temp, 10240, szConfigFile);
 	m_logConfig.bIgnoreKnownRepeatedLog = Temp[0] == '1';
 
+	GetPrivateProfileString("Setting", "ShowMaximize", "1", (char*)Temp, 10240, szConfigFile);
+	m_logConfig.nShowMaximize = Temp[0] == '1';
+
 	CString strKey, strTokenStart, strTokenEnd;
 	int nCount = GetPrivateProfileInt("EnumToString", "Count", 0, szConfigFile);
 	for (int i = 1; i <= nCount; i++)
@@ -482,12 +491,12 @@ void CLogViewerDlg::InitLogList()
 	int nCol = 0;
 	m_pLogList->InsertColumn(nCol++, " ", LVCFMT_LEFT, 20);
 	m_pLogList->InsertColumn(nCol++, "Log Time", LVCFMT_LEFT, 150);
-	m_pLogList->InsertColumn(nCol++, "ModuleName", LVCFMT_LEFT, 90);
+	m_pLogList->InsertColumn(nCol++, "ModuleName", LVCFMT_LEFT, 100);
 	m_pLogList->InsertColumn(nCol++, "PID", LVCFMT_LEFT, 50);
 	m_pLogList->InsertColumn(nCol++, "TID", LVCFMT_LEFT, 50);
-	m_pLogList->InsertColumn(nCol++, "Log Content", LVCFMT_LEFT, 580);
+	m_pLogList->InsertColumn(nCol++, "Log Content", LVCFMT_LEFT, 500);
 	m_pLogList->InsertColumn(nCol++, "Code", LVCFMT_LEFT, 50);
-	m_pLogList->InsertColumn(nCol++, "File", LVCFMT_LEFT, 60);
+	m_pLogList->InsertColumn(nCol++, "File", LVCFMT_LEFT, 130);
 	m_pLogList->InsertColumn(nCol++, "LineNo", LVCFMT_LEFT, 50);
 	m_pLogList->InsertColumn(nCol++, "MN", LVCFMT_LEFT, 30);
 
@@ -1210,10 +1219,7 @@ void CLogViewerDlg::AfterLoad()
 		m_pLogList->SetColumnWidth(4, 0);
 
 		int nWidth = m_pLogList->GetColumnWidth(5);
-		if (nWidth == 580 )
-		{
-			m_pLogList->SetColumnWidth(5, nWidth+100);
-		}
+		m_pLogList->SetColumnWidth(5, nWidth+100);
 	}
 }
 
@@ -1979,4 +1985,69 @@ void CLogViewerDlg::OnNMClickListLog(NMHDR *pNMHDR, LRESULT *pResult)
 	}
 	
 	*pResult = 0;
+}
+
+void CLogViewerDlg::MoveControl(int nWidthDiff, int nHeightDiff, int nID, BOOL bMoveLeft, BOOL bMoveTop, BOOL bChangeHeight, BOOL bChangeWidth)
+{
+	CWnd* pChildWnd = GetDlgItem(nID);
+	CRect rect;
+	pChildWnd->GetWindowRect(&rect);
+	ScreenToClient(&rect);
+
+	int nOldHeight = rect.Height();
+	int nOldWidth = rect.Width();
+	
+	if (bMoveLeft)
+	{
+		rect.left += nWidthDiff;
+		rect.right += nWidthDiff;
+	}
+	
+	if (bMoveTop)
+	{
+		rect.top += nHeightDiff;
+		rect.bottom += nHeightDiff;
+	}
+
+	if (bChangeWidth)
+		rect.right = rect.left + nOldWidth + nWidthDiff;
+
+	if (bChangeHeight)
+		rect.bottom = rect.top + nOldHeight + nHeightDiff;
+
+	pChildWnd->MoveWindow(&rect);
+}
+
+void CLogViewerDlg::OnSize(UINT nType, int cx, int cy)
+{
+	CDialog::OnSize(nType, cx, cy);
+
+	CRect rectOld = m_rectClient;
+	GetClientRect(&m_rectClient);
+
+	if (rectOld.Width() == 0)
+		return;
+	
+	int nWidthDiff = m_rectClient.right - rectOld.right;
+	int nHeightDiff = m_rectClient.bottom - rectOld.bottom;
+
+	MoveControl(nWidthDiff, nHeightDiff, IDC_STATIC_FILTER_GROUP, FALSE, FALSE, TRUE, FALSE);
+	MoveControl(nWidthDiff, nHeightDiff, IDC_BUTTON_RELOAD, FALSE, TRUE, FALSE, FALSE);
+	MoveControl(nWidthDiff, nHeightDiff, IDC_BUTTON_REFRESH, FALSE, TRUE, FALSE, FALSE);
+	MoveControl(nWidthDiff, nHeightDiff, IDC_BUTTON_CLEAR, FALSE, TRUE, FALSE, FALSE);
+	MoveControl(nWidthDiff, nHeightDiff, IDC_LIST_MODULE_LIST, FALSE, FALSE, TRUE, FALSE);
+	
+	MoveControl(nWidthDiff, nHeightDiff, IDC_STATIC_KEYWORD_GROUP, FALSE, FALSE, FALSE, TRUE);
+	MoveControl(nWidthDiff, nHeightDiff, IDC_BUTTON_HIGHLIGHT_FIRST, TRUE, FALSE, FALSE, FALSE);
+	MoveControl(nWidthDiff, nHeightDiff, IDC_BUTTON_HIGHLIGHT_PREV, TRUE, FALSE, FALSE, FALSE);
+	MoveControl(nWidthDiff, nHeightDiff, IDC_BUTTON_HIGHLIGHT_NEXT, TRUE, FALSE, FALSE, FALSE);
+	MoveControl(nWidthDiff, nHeightDiff, IDC_BUTTON_HIGHLIGHT_LAST, TRUE, FALSE, FALSE, FALSE);
+	MoveControl(nWidthDiff, nHeightDiff, IDC_STATIC_SEARCH_RESULT, TRUE, FALSE, FALSE, FALSE);
+	MoveControl(nWidthDiff, nHeightDiff, IDC_EDIT_SEARCH, TRUE, FALSE, FALSE, FALSE);
+
+	MoveControl(nWidthDiff, nHeightDiff, IDC_STATIC_LOG_GROUP, FALSE, FALSE, TRUE, TRUE);
+	MoveControl(nWidthDiff, nHeightDiff, IDC_LIST_LOG, FALSE, FALSE, TRUE, TRUE);
+	MoveControl(nWidthDiff, nHeightDiff, IDC_EDIT_RAW_LOG, FALSE, TRUE, FALSE, TRUE);
+
+	m_pLogList->SetColumnWidth(5, m_pLogList->GetColumnWidth(5) + nWidthDiff);
 }

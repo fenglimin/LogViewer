@@ -27,6 +27,7 @@ struct LogConfig
 	CString strNotepadPathName;
 
 	BOOL bIgnoreKnownRepeatedLog;
+	BOOL nShowMaximize;
 
 	std::vector<EnumToString> vecEnumToString;
 };
@@ -247,6 +248,11 @@ afx_msg void OnBnClickedCheckDipError();
 afx_msg void OnBnClickedCheckWindowsMessage();
 BOOL FindNoCase(const CString& strContent, const CString& strToken);
 afx_msg void OnNMClickListLog(NMHDR *pNMHDR, LRESULT *pResult);
+afx_msg void MoveControl(int nWidthDiff, int nHeightDiff, int nID, BOOL bMoveLeft, BOOL bMoveTop, BOOL bChangeHeight, BOOL bChangeWidth);
+//void OnSizing(UINT fwSide, LPRECT pRect);
+afx_msg void OnSize(UINT nType, int cx, int cy);
+
+	CRect m_rectClient;
 };
 
 //{{AFX_INSERT_LOCATION}}
