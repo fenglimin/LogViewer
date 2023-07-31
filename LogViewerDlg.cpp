@@ -188,6 +188,7 @@ BEGIN_MESSAGE_MAP(CLogViewerDlg, CDialog)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_LOG, &CLogViewerDlg::OnNMClickListLog)
 //	ON_WM_SIZING()
 	ON_WM_SIZE()
+	ON_WM_GETMINMAXINFO()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -887,7 +888,7 @@ void CLogViewerDlg::AddLogFile(const CString& strLogFileFullName, const CString&
 	std::streampos fileSize = ifs.tellg();
 	ifs.close();
 
-	CStringEx strSize((int)(fileSize/1024));
+	CStringEx strSize((int)(fileSize/1024) + 1);
 	
 	int nPos = m_pLogFileList->InsertItem(m_pLogFileList->GetItemCount(), "");
 	m_pLogFileList->SetItemText(nPos, 1, strLogFileName);
@@ -2047,4 +2048,13 @@ void CLogViewerDlg::OnSize(UINT nType, int cx, int cy)
 	MoveControl(nWidthDiff, nHeightDiff, IDC_EDIT_RAW_LOG, FALSE, TRUE, FALSE, TRUE);
 
 	m_pLogList->SetColumnWidth(5, m_pLogList->GetColumnWidth(5) + nWidthDiff);
+}
+
+
+void CLogViewerDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
+{
+	lpMMI->ptMinTrackSize.x = 1415;
+	lpMMI->ptMinTrackSize.y = 842;
+
+	CDialog::OnGetMinMaxInfo(lpMMI);
 }

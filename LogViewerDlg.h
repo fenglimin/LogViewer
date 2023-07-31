@@ -246,6 +246,7 @@ public:
 	void	InitLogFileList();
 	void	ShowAllLogFiles();
 	int		GetSelectedModules();
+	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 };
 
 //{{AFX_INSERT_LOCATION}}
