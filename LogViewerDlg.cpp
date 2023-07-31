@@ -752,8 +752,8 @@ void CLogViewerDlg::InitModuleList()
 	m_pModuleList->SetExtendedStyle(dwStyle);
 
 	m_pModuleList->InsertColumn(0, " ", LVCFMT_LEFT, 20);
-	m_pModuleList->InsertColumn(1, "No", LVCFMT_LEFT, 30);
-	m_pModuleList->InsertColumn(2, "Name", LVCFMT_LEFT, 150);
+	m_pModuleList->InsertColumn(1, "MN", LVCFMT_LEFT, 30);
+	m_pModuleList->InsertColumn(2, "Module Name", LVCFMT_LEFT, 150);
 
 	for(int i = 0; i < m_logConfig.vecModule.size(); i++)
 	{
