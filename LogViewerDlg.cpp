@@ -467,6 +467,28 @@ BOOL CLogViewerDlg::LoadConfig()
 		m_logConfig.vecEnumToString.push_back(enumToString);
 	}
 
+	nCount = GetPrivateProfileInt("Module", "Count", 0, szConfigFile);
+	for (int i = 1; i <= nCount; i++)
+	{
+		ModuleDetail moduleDetail;
+		strKey.Format("Item%d_ModuleID", i);
+		GetPrivateProfileString("Module", strKey, "", (char*)Temp, 10240, szConfigFile);
+		moduleDetail.strModuleId = Temp;
+
+		strKey.Format("Item%d_ModuleName", i);
+		GetPrivateProfileString("Module", strKey, "", (char*)Temp, 10240, szConfigFile);
+		moduleDetail.strModuleName = Temp;
+
+		strKey.Format("Item%d_ProjectDir", i);
+		GetPrivateProfileString("Module", strKey, "", (char*)Temp, 10240, szConfigFile);
+		moduleDetail.strProjectDir = Temp;
+		
+		strKey.Format("Item%d_ProjectFile", i);
+		GetPrivateProfileString("Module", strKey, "", (char*)Temp, 10240, szConfigFile);
+		moduleDetail.strProjectFile = Temp;
+
+		m_logConfig.vecModule.push_back(moduleDetail);
+	}
 	
 	return TRUE;
 }
@@ -728,29 +750,10 @@ void CLogViewerDlg::InitModuleList()
 	m_pModuleList->InsertColumn(1, "No", LVCFMT_LEFT, 30);
 	m_pModuleList->InsertColumn(2, "Name", LVCFMT_LEFT, 150);
 
-	AddModule("0", "MiniPacsWeb", "", "");
-	AddModule("1", "MiniPacsHost", "WebPacs", "");
-	AddModule("11", "SMS Server", "GCPACS\\Src\\Server\\SMS", "SMS.vcxproj");
-	AddModule("12", "Print Server", "GCPACS\\Src\\Server\\PrintServer", "PrintServer.vcxproj");
-	AddModule("16", "Service Manager", "GCPACS\\Src\\Server\\ServiceManager", "ServiceManager.vcxproj");
-	AddModule("30", "Task Manager", "GCPACS\\Src\\Server\\TaskManager", "TaskManager.vcxproj");
-	AddModule("33", "Oam Server", "GCPACS\\Src\\Server\\OamServer", "OamServer.vcxproj");
-	AddModule("34", "OAM Panel", "GCPACS\\Src\\Client\\OAMPANEL", "OamPanel.vcxproj");
-	AddModule("35", "Rule Server", "GCPACS\\Src\\Server\\RuleServer", "RuleServer.vcxproj");
-	AddModule("36", "Eclipse", "GCPACS\\Src\\Client\\EclipseTool", "EclipseTool.vcxproj");
-	AddModule("47", "PDC Sender Server", "GCPACS\\Src\\Server\\PdcSender\\PdcSenderServer", "PdcSenderServer.vcxproj");
-	AddModule("52", "SSCU", "GCPACS\\Src\\Server\\SSCU", "SSCU.vcxproj");
-	AddModule("53", "SSCP Server", "GCPACS\\Src\\Server\\SSCPServer", "SscpServer.vcxproj");
-	AddModule("56", "Acq Server", "GCPACS\\Src\\Server\\AcquisitionServer", "AcquisitionServer.vcxproj");
-	AddModule("59", "Multi Recordset", "GCPACS\\Src\\Server\\QRSCU\\MultiRecordSet", "MRS.vcxproj");
-	AddModule("65", "Framework", "GCPACS\\Src\\Client\\FRAMEWORK", "framework.vcxproj");
-	AddModule("66", "Audit Server", "GCPACS\\Src\\Server\\AuditServer", "AuditServer.vcxproj");
-	AddModule("71", "QC Client", "GCPACS\\Src\\Server\\QCClient", "QCClient.vcxproj");
-	AddModule("77", "MWL Server", "GCPACS\\Src\\Server\\MWL", "mwl.vcxproj");
-	AddModule("80", "Service Config", "GCPACS\\Src\\ServiceTools\\ServiceConfig\\Service_Cfg", "Service_Cfg.vcxproj");
-	AddModule("93", "Device Manager", "GCPACS\\Src\\Client\\DeviceManager\\DeviceManager", "DeviceManager.vcxproj");
-	AddModule("94", "Acq Panel", "GCPACS\\Src\\Client\\AcqPanel", "AcqPanel.vcxproj");
-	AddModule("601", "OptionService", "", "");
+	for(int i = 0; i < m_logConfig.vecModule.size(); i++)
+	{
+		AddModule(m_logConfig.vecModule[i]);
+	}
 }
 
 void CLogViewerDlg::InitLogFileList()
@@ -861,19 +864,11 @@ void CLogViewerDlg::EnableHourControl(BOOL bEnable)
 	GetDlgItem(IDC_EDIT_END_HOUR)->EnableWindow(bEnable);
 }
 
-void CLogViewerDlg::AddModule(const CString& strModuleId, const CString& strModuleName, const CString& strProjectDir, const CString& strProjectFile)
+void CLogViewerDlg::AddModule(ModuleDetail moduleDetail)
 {
-	ModuleDetail moduleDetail;
-	moduleDetail.strModuleId = strModuleId;
-	moduleDetail.strModuleName = strModuleName;
-	moduleDetail.strProjectDir = strProjectDir;
-	moduleDetail.strProjectFile = strProjectFile;
-
-	m_vecModule.push_back(moduleDetail);
-	
 	int nPos = m_pModuleList->InsertItem(m_pModuleList->GetItemCount(), "");
-	m_pModuleList->SetItemText(nPos, 1, strModuleId);
-	m_pModuleList->SetItemText(nPos, 2, strModuleName);
+	m_pModuleList->SetItemText(nPos, 1, moduleDetail.strModuleId);
+	m_pModuleList->SetItemText(nPos, 2, moduleDetail.strModuleName);
 }
 
 void CLogViewerDlg::AddLogFile(const CString& strLogFileFullName, const CString& strLogFileName)
@@ -1625,9 +1620,9 @@ void CLogViewerDlg::OnNMClickListFile(NMHDR *pNMHDR, LRESULT *pResult)
 
 CString CLogViewerDlg::FindSourceFilePath(const CString & strModuleId, const CString & strSourceFileName)
 {
-	for (int i = 0; i < m_vecModule.size(); i++)
+	for (int i = 0; i < m_logConfig.vecModule.size(); i++)
 	{
-		if (m_vecModule[i].strModuleId == strModuleId)
+		if (m_logConfig.vecModule[i].strModuleId == strModuleId)
 		{
 			if (strModuleId == "0")
 			{
@@ -1638,11 +1633,11 @@ CString CLogViewerDlg::FindSourceFilePath(const CString & strModuleId, const CSt
 			if (strModuleId == "1")
 			{
 				// Special logic for web host
-				CString strSourceRoot = m_logConfig.strSourceRoot + "\\" + m_vecModule[i].strProjectDir;
+				CString strSourceRoot = m_logConfig.strSourceRoot + "\\" + m_logConfig.vecModule[i].strProjectDir;
 				return FindFileRecursive(strSourceRoot, strSourceFileName);
 			}
 
-			CString strProjectFilePathName = m_logConfig.strSourceRoot + "\\" + m_vecModule[i].strProjectDir + "\\" + m_vecModule[i].strProjectFile;
+			CString strProjectFilePathName = m_logConfig.strSourceRoot + "\\" + m_logConfig.vecModule[i].strProjectDir + "\\" + m_logConfig.vecModule[i].strProjectFile;
 
 			char sCurLine[1024];
 			ifstream ifs(strProjectFilePathName);
@@ -1654,7 +1649,7 @@ CString CLogViewerDlg::FindSourceFilePath(const CString & strModuleId, const CSt
 				{
 					CString strRelativePath = strLine.GetDelimitedField("\"", strSourceFileName, 0);
 					strRelativePath = strRelativePath.Right(strRelativePath.GetLength() - 1);
-					return m_logConfig.strSourceRoot + "\\" + m_vecModule[i].strProjectDir + "\\" + strRelativePath + strSourceFileName;
+					return m_logConfig.strSourceRoot + "\\" + m_logConfig.vecModule[i].strProjectDir + "\\" + strRelativePath + strSourceFileName;
 				}
 			}
 

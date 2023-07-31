@@ -20,6 +20,15 @@ struct EnumToString
 	CString arrayToken[100];
 };
 
+struct ModuleDetail
+{
+	CString	strModuleId;
+	CString	strModuleName;
+	CString strProjectDir;
+	CString strProjectFile;
+
+};
+
 struct LogConfig
 {
 	CString strLogRoot;
@@ -30,15 +39,7 @@ struct LogConfig
 	BOOL nShowMaximize;
 
 	std::vector<EnumToString> vecEnumToString;
-};
-
-struct ModuleDetail
-{
-	CString	strModuleId;
-	CString	strModuleName;
-	CString strProjectDir;
-	CString strProjectFile;
-	
+	std::vector<ModuleDetail> vecModule;
 };
 
 struct LogStatus
@@ -103,8 +104,6 @@ private:
 	int			m_nEnsureVisibleItem;
 	CRect		m_rectClient;
 
-	
-	std::vector<ModuleDetail> m_vecModule;
 	std::vector<CString> m_vecFilterKeyword;
 	std::vector<LogFile> m_vecLogFile;
 	std::vector<int> m_vecHitedLine;
@@ -227,7 +226,7 @@ public:
 	BOOL	IsLogItemVisible(int nItem);
 	void	LoadDayLog(CString strDate, BOOL bUpdateSize);
 	BOOL	LoadConfig();
-	void	AddModule(const CString& strModuleId, const CString& strModuleName, const CString& strProjectDir = "", const CString& strProjectFile = "");
+	void	AddModule(ModuleDetail moduleDetail);
 	BOOL	BeforeLoad();
 	int		GetTotalRawLogCount();
 	void	AfterLoad();
