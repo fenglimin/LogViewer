@@ -489,6 +489,11 @@ BOOL CLogViewerDlg::LoadConfig()
 
 		m_logConfig.vecModule.push_back(moduleDetail);
 	}
+
+	int nSort = GetPrivateProfileInt("Module", "SortById", 1, szConfigFile);
+	std::sort(m_logConfig.vecModule.begin(), m_logConfig.vecModule.end(), [&](const ModuleDetail& a, const ModuleDetail& b) {
+		return nSort == 1? a.strModuleId < b.strModuleId : a.strModuleName < b.strModuleName;
+	});
 	
 	return TRUE;
 }
