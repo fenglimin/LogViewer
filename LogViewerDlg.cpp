@@ -1926,8 +1926,11 @@ int CLogViewerDlg::GetTotalRawLogCount()
 
 void CLogViewerDlg::OnNMClickListLog(NMHDR *pNMHDR, LRESULT *pResult)
 {
+	*pResult = 0;
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-
+	if (pNMItemActivate->iItem == -1)
+		return;
+	
 	LogStatus* pLogStatus = (LogStatus*)m_pLogList->GetItemData(pNMItemActivate->iItem);
 	LogDetail logDetail = m_vecLogFile[pLogStatus->nLogFileIndex].vecLog[pLogStatus->nLogContentIndex];
 
@@ -1982,7 +1985,7 @@ void CLogViewerDlg::OnNMClickListLog(NMHDR *pNMHDR, LRESULT *pResult)
 		}
 	}
 	
-	*pResult = 0;
+	
 }
 
 void CLogViewerDlg::MoveControl(int nWidthDiff, int nHeightDiff, int nID, BOOL bMoveLeft, BOOL bMoveTop, BOOL bChangeHeight, BOOL bChangeWidth)
@@ -2023,7 +2026,7 @@ void CLogViewerDlg::OnSize(UINT nType, int cx, int cy)
 	CRect rectOld = m_rectClient;
 	GetClientRect(&m_rectClient);
 
-	if (rectOld.Width() == 0)
+	if (rectOld.Width() == 0 || cx == 0 || cy == 0)
 		return;
 	
 	int nWidthDiff = m_rectClient.right - rectOld.right;
