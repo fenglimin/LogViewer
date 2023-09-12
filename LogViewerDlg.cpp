@@ -492,7 +492,7 @@ BOOL CLogViewerDlg::LoadConfig()
 
 	int nSort = GetPrivateProfileInt("Module", "SortById", 1, szConfigFile);
 	std::sort(m_logConfig.vecModule.begin(), m_logConfig.vecModule.end(), [&](const ModuleDetail& a, const ModuleDetail& b) {
-		return nSort == 1? a.strModuleId < b.strModuleId : a.strModuleName < b.strModuleName;
+		return nSort == 1? atoi(a.strModuleId) < atoi(b.strModuleId) : a.strModuleName < b.strModuleName;
 	});
 	
 	return TRUE;
@@ -899,7 +899,7 @@ void CLogViewerDlg::LoadDayLog(CString strDate, BOOL bUpdateSize)
 {
 	if ( m_bCurrentHour )
 	{
-		CString strHour = m_dtNow.Format("%H");
+		CString strHour = COleDateTime::GetCurrentTime().Format("%H");
 		CString strLogFileName = strDate + "-" + strHour + ".log";
 		CString strLogFileFullName = m_logConfig.strLogRoot + "\\" + strLogFileName.Left(10) + "\\" + strLogFileName;
 		AddLogFile(strLogFileFullName, strLogFileName);
