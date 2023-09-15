@@ -1206,18 +1206,26 @@ void CLogViewerDlg::AfterLoad()
 	else
 		ShowStatistics(-1);
 
+	BOOL bProcessAndThreadIdShown = m_pLogList->GetColumnWidth(3) != 0 && m_pLogList->GetColumnWidth(4) != 0;
+	int nContentWidth = m_pLogList->GetColumnWidth(5);
 	if (m_bShowProcessAndThreadId)
 	{
 		m_pLogList->SetColumnWidth(3, 50);
 		m_pLogList->SetColumnWidth(4, 50);
+		if (!bProcessAndThreadIdShown)
+		{
+			m_pLogList->SetColumnWidth(5, nContentWidth - 100);	
+		}
 	}
 	else
 	{
 		m_pLogList->SetColumnWidth(3, 0);
 		m_pLogList->SetColumnWidth(4, 0);
 
-		int nWidth = m_pLogList->GetColumnWidth(5);
-		m_pLogList->SetColumnWidth(5, nWidth+100);
+		if (bProcessAndThreadIdShown)
+		{
+			m_pLogList->SetColumnWidth(5, nContentWidth + 100);
+		}		
 	}
 }
 
